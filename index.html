@@ -960,24 +960,60 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 .cancel-error-box{background:#fff5f5;border:1px solid #f5c6cb;border-radius:var(--radius);
   padding:12px 14px;font-size:13px;color:#721c24;margin-top:12px;display:none;line-height:1.6}
 /* ═══════════════════════════════════════════
-   CHAMP TÉLÉPHONE AVEC INDICATIF
+   CHAMP TÉLÉPHONE AVEC INDICATIF — CUSTOM DROPDOWN
 ═══════════════════════════════════════════ */
-.phone-field{display:flex;gap:0}
-.phone-flag-select{
-  background:var(--white);border:1px solid var(--border);
-  border-right:none;border-radius:var(--radius) 0 0 var(--radius);
-  padding:0 8px;font-size:13px;color:var(--ink);
-  cursor:pointer;min-width:90px;outline:none;
-  appearance:none;-webkit-appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 8px center;
-  padding-right:22px;
-}
-.phone-flag-select:focus{border-color:var(--blue);z-index:1}
+.phone-field{display:flex;gap:0;position:relative;align-items:stretch}
 .phone-number-input{
   border-radius:0 var(--radius) var(--radius) 0!important;
   flex:1;
 }
+/* Bouton déclencheur du dropdown */
+.phone-dial-btn{
+  display:flex;align-items:center;gap:5px;
+  background:var(--white);border:1px solid rgba(27,46,122,.18);
+  border-right:none;border-radius:var(--radius) 0 0 var(--radius);
+  padding:0 10px;font-size:13px;color:var(--ink);
+  cursor:pointer;white-space:nowrap;min-width:100px;
+  height:100%;transition:border-color .2s;user-select:none;
+  outline:none;
+}
+.phone-dial-btn:focus,.phone-dial-btn.open{border-color:var(--blue);z-index:1}
+.phone-dial-btn .dial-flag{font-size:16px;line-height:1}
+.phone-dial-btn .dial-code{font-size:12.5px;font-weight:500;color:var(--ink)}
+.phone-dial-btn .dial-arrow{
+  font-size:9px;color:var(--muted);margin-left:2px;
+  transition:transform .2s;display:inline-block;
+}
+.phone-dial-btn.open .dial-arrow{transform:rotate(180deg)}
+/* Dropdown liste */
+.phone-dial-dropdown{
+  position:absolute;top:calc(100% + 4px);left:0;
+  background:var(--white);border:1px solid rgba(27,46,122,.18);
+  border-radius:var(--radius);box-shadow:0 8px 28px rgba(27,46,122,.14);
+  z-index:500;min-width:230px;max-height:240px;overflow-y:auto;
+  display:none;
+}
+.phone-dial-dropdown.open{display:block}
+.phone-dial-search{
+  padding:8px 10px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--white);z-index:1;
+}
+.phone-dial-search input{
+  width:100%;border:1px solid rgba(27,46,122,.18);border-radius:3px;
+  padding:5px 9px;font-size:12.5px;color:var(--ink);outline:none;
+  font-family:'Inter',sans-serif;
+}
+.phone-dial-search input:focus{border-color:var(--blue)}
+.phone-dial-option{
+  display:flex;align-items:center;gap:9px;padding:8px 12px;
+  cursor:pointer;font-size:13px;color:var(--ink);
+  transition:background .15s;
+}
+.phone-dial-option:hover{background:var(--blue-lt)}
+.phone-dial-option.selected{background:var(--blue-lt);font-weight:500}
+.phone-dial-option .opt-flag{font-size:17px;flex-shrink:0;width:22px;text-align:center}
+.phone-dial-option .opt-name{flex:1;font-size:12.5px;color:var(--ink)}
+.phone-dial-option .opt-code{font-size:12px;color:var(--muted);font-weight:500;flex-shrink:0}
 
 /* ═══════════════════════════════════════════
    FLATPICKR — THÈME PERSONNALISÉ
@@ -2863,11 +2899,84 @@ var PHONE_CODES = [
 ];
 
 function buildPhoneCodeSelect(prefix) {
-  var opts = PHONE_CODES.map(function(c) {
-    return '<option value="'+c.code+'"'+(c.code==='+229'?' selected':'')+'>'+c.flag+' '+c.code+' — '+c.name+'</option>';
+  var defaultCode = PHONE_CODES[0]; // Bénin +229
+  var optItems = PHONE_CODES.map(function(c) {
+    return '<div class="phone-dial-option'+(c.code==='+229'?' selected':'')+'" '
+      +'data-code="'+c.code+'" data-flag="'+c.flag+'" data-name="'+c.name+'" '
+      +'onclick="dialSelect(this,\''+prefix+'\')">'
+      +'<span class="opt-flag">'+c.flag+'</span>'
+      +'<span class="opt-name">'+c.name+'</span>'
+      +'<span class="opt-code">'+c.code+'</span>'
+      +'</div>';
   }).join('');
-  return '<select class="phone-flag-select" id="'+prefix+'-tel-code">'+opts+'</select>';
+  return '<input type="hidden" id="'+prefix+'-tel-code" value="'+defaultCode.code+'">'
+    +'<button type="button" class="phone-dial-btn" id="'+prefix+'-dial-btn" '
+    +'onclick="toggleDial(event,\''+prefix+'\')" aria-haspopup="listbox">'
+    +'<span class="dial-flag" id="'+prefix+'-dial-flag">'+defaultCode.flag+'</span>'
+    +'<span class="dial-code" id="'+prefix+'-dial-code">'+defaultCode.code+'</span>'
+    +'<span class="dial-arrow">▼</span>'
+    +'</button>'
+    +'<div class="phone-dial-dropdown" id="'+prefix+'-dial-drop">'
+    +'<div class="phone-dial-search"><input type="text" placeholder="Rechercher un pays…" '
+    +'oninput="filterDial(this,\''+prefix+'\')" autocomplete="off"></div>'
+    +'<div id="'+prefix+'-dial-list">'+optItems+'</div>'
+    +'</div>';
 }
+
+function toggleDial(e, prefix) {
+  e.stopPropagation();
+  var btn  = document.getElementById(prefix+'-dial-btn');
+  var drop = document.getElementById(prefix+'-dial-drop');
+  if (!btn || !drop) return;
+  var isOpen = drop.classList.contains('open');
+  // Close all dropdowns first
+  document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){ d.classList.remove('open'); });
+  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){ b.classList.remove('open'); });
+  if (!isOpen) {
+    drop.classList.add('open');
+    btn.classList.add('open');
+    var si = drop.querySelector('input');
+    if (si) { si.value = ''; filterDial(si, prefix); si.focus(); }
+  }
+}
+
+function dialSelect(optEl, prefix) {
+  var code = optEl.getAttribute('data-code');
+  var flag = optEl.getAttribute('data-flag');
+  document.getElementById(prefix+'-tel-code').value = code;
+  document.getElementById(prefix+'-dial-flag').textContent = flag;
+  document.getElementById(prefix+'-dial-code').textContent = code;
+  // Mark selected
+  var list = document.getElementById(prefix+'-dial-list');
+  if (list) list.querySelectorAll('.phone-dial-option').forEach(function(o){
+    o.classList.toggle('selected', o===optEl);
+  });
+  // Close
+  var drop = document.getElementById(prefix+'-dial-drop');
+  var btn  = document.getElementById(prefix+'-dial-btn');
+  if (drop) drop.classList.remove('open');
+  if (btn)  btn.classList.remove('open');
+  // Focus phone number input
+  var tel = document.getElementById(prefix+'-tel');
+  if (tel) tel.focus();
+}
+
+function filterDial(input, prefix) {
+  var q = input.value.toLowerCase();
+  var list = document.getElementById(prefix+'-dial-list');
+  if (!list) return;
+  list.querySelectorAll('.phone-dial-option').forEach(function(o) {
+    var name = (o.getAttribute('data-name')||'').toLowerCase();
+    var code = (o.getAttribute('data-code')||'').toLowerCase();
+    o.style.display = (!q || name.indexOf(q)>=0 || code.indexOf(q)>=0) ? '' : 'none';
+  });
+}
+
+// Close dialDropdowns on outside click
+document.addEventListener('click', function() {
+  document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){ d.classList.remove('open'); });
+  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){ b.classList.remove('open'); });
+});
 
 function buildPaymentMethods(prefix) {
   var actives = METHODES_PAIEMENT.filter(function(m){ return m.actif; });
@@ -2898,9 +3007,11 @@ function buildBookForm(prefix, apt) {
     +'<div class="form-row">'
     +'<div class="form-group"><label class="form-label">Arrivée *</label>'
     +'<input class="form-input" id="'+prefix+'-arr" type="text" placeholder="Choisir une date" readonly>'
+    +'<div class="form-error" id="'+prefix+'-arr-err">Date d\'arrivée requise</div>'
     +'</div>'
     +'<div class="form-group"><label class="form-label">Départ *</label>'
     +'<input class="form-input" id="'+prefix+'-dep" type="text" placeholder="Choisir une date" readonly>'
+    +'<div class="form-error" id="'+prefix+'-dep-err">Date de départ requise</div>'
     +'</div>'
     +'</div>'
     +'<div class="flatpickr-legend"><div class="flatpickr-legend-item"><span class="leg-dot leg-dispo"></span>Disponible</div><div class="flatpickr-legend-item"><span class="leg-dot leg-indispo"></span>Réservé</div><div class="flatpickr-legend-item"><span class="leg-dot leg-sel"></span>Votre choix</div></div>'
@@ -3011,12 +3122,25 @@ async function submitResa(prefix, aptId) {
     return opt ? opt.textContent.trim() : 'MTN MoMo';
   })();
   var errShown=false;
-  ['nom','tel','email','arr','dep'].forEach(function(f){
-    var v=(document.getElementById(prefix+'-'+f)||{}).value||'';
-    var err=document.getElementById(prefix+'-'+f+'-err');
-    if(err) err.classList.remove('show');
-    if(!v&&err){err.classList.add('show');errShown=true;}
-  });
+  // Valider le nom
+  var nomErr=document.getElementById(prefix+'-nom-err');
+  if(nomErr) nomErr.classList.remove('show');
+  if(!nom.trim()&&nomErr){nomErr.classList.add('show');errShown=true;}
+  // Valider le téléphone (numéro seul, hors indicatif)
+  var telErr=document.getElementById(prefix+'-tel-err');
+  if(telErr) telErr.classList.remove('show');
+  if(!num.trim()&&telErr){telErr.classList.add('show');errShown=true;}
+  // Valider email
+  var emailErr=document.getElementById(prefix+'-email-err');
+  if(emailErr) emailErr.classList.remove('show');
+  if(!email.trim()&&emailErr){emailErr.classList.add('show');errShown=true;}
+  // Valider dates
+  var arrErr=document.getElementById(prefix+'-arr-err');
+  var depErr=document.getElementById(prefix+'-dep-err');
+  if(arrErr) arrErr.classList.remove('show');
+  if(depErr) depErr.classList.remove('show');
+  if(!arr&&arrErr){arrErr.classList.add('show');errShown=true;}
+  if(!dep&&depErr){depErr.classList.add('show');errShown=true;}
   if(errShown) return;
   if(!/^[^@]+@[^@]+\.[^@]+$/.test(email)){
     var ee=document.getElementById(prefix+'-email-err');
