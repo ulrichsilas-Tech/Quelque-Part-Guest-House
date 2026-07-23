@@ -960,60 +960,72 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 .cancel-error-box{background:#fff5f5;border:1px solid #f5c6cb;border-radius:var(--radius);
   padding:12px 14px;font-size:13px;color:#721c24;margin-top:12px;display:none;line-height:1.6}
 /* ═══════════════════════════════════════════
-   CHAMP TÉLÉPHONE AVEC INDICATIF — CUSTOM DROPDOWN
+   CHAMP TÉLÉPHONE AVEC INDICATIF — DROPDOWN PREMIUM
 ═══════════════════════════════════════════ */
 .phone-field{display:flex;gap:0;position:relative;align-items:stretch}
-.phone-number-input{
-  border-radius:0 var(--radius) var(--radius) 0!important;
-  flex:1;
-}
-/* Bouton déclencheur du dropdown */
+.phone-number-input{border-radius:0 var(--radius) var(--radius) 0!important;flex:1}
+
+/* Bouton déclencheur */
 .phone-dial-btn{
-  display:flex;align-items:center;gap:5px;
-  background:var(--white);border:1px solid rgba(27,46,122,.18);
-  border-right:none;border-radius:var(--radius) 0 0 var(--radius);
-  padding:0 10px;font-size:13px;color:var(--ink);
-  cursor:pointer;white-space:nowrap;min-width:100px;
-  height:100%;transition:border-color .2s;user-select:none;
-  outline:none;
-}
-.phone-dial-btn:focus,.phone-dial-btn.open{border-color:var(--blue);z-index:1}
-.phone-dial-btn .dial-flag{font-size:16px;line-height:1}
-.phone-dial-btn .dial-code{font-size:12.5px;font-weight:500;color:var(--ink)}
-.phone-dial-btn .dial-arrow{
-  font-size:9px;color:var(--muted);margin-left:2px;
-  transition:transform .2s;display:inline-block;
-}
-.phone-dial-btn.open .dial-arrow{transform:rotate(180deg)}
-/* Dropdown liste */
-.phone-dial-dropdown{
-  position:absolute;top:calc(100% + 4px);left:0;
-  background:var(--white);border:1px solid rgba(27,46,122,.18);
-  border-radius:var(--radius);box-shadow:0 8px 28px rgba(27,46,122,.14);
-  z-index:500;min-width:230px;max-height:240px;overflow-y:auto;
-  display:none;
-}
-.phone-dial-dropdown.open{display:block}
-.phone-dial-search{
-  padding:8px 10px;border-bottom:1px solid var(--border);
-  position:sticky;top:0;background:var(--white);z-index:1;
-}
-.phone-dial-search input{
-  width:100%;border:1px solid rgba(27,46,122,.18);border-radius:3px;
-  padding:5px 9px;font-size:12.5px;color:var(--ink);outline:none;
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--white);
+  border:1px solid rgba(27,46,122,.18);border-right:none;
+  border-radius:var(--radius) 0 0 var(--radius);
+  padding:0 10px 0 8px;
+  cursor:pointer;white-space:nowrap;min-width:86px;
+  transition:border-color .2s;user-select:none;outline:none;
   font-family:'Inter',sans-serif;
 }
-.phone-dial-search input:focus{border-color:var(--blue)}
-.phone-dial-option{
-  display:flex;align-items:center;gap:9px;padding:8px 12px;
-  cursor:pointer;font-size:13px;color:var(--ink);
-  transition:background .15s;
+.phone-dial-btn:focus,.phone-dial-btn.open{border-color:var(--blue);z-index:2}
+.phone-dial-btn .dial-flag{font-size:18px;line-height:1;flex-shrink:0}
+.phone-dial-btn .dial-code{font-size:12.5px;font-weight:500;color:var(--ink);letter-spacing:.01em}
+.phone-dial-btn .dial-caret{
+  font-size:8px;color:#9CA3AF;margin-left:1px;
+  transition:transform .18s;display:inline-block;flex-shrink:0;
 }
-.phone-dial-option:hover{background:var(--blue-lt)}
-.phone-dial-option.selected{background:var(--blue-lt);font-weight:500}
-.phone-dial-option .opt-flag{font-size:17px;flex-shrink:0;width:22px;text-align:center}
-.phone-dial-option .opt-name{flex:1;font-size:12.5px;color:var(--ink)}
-.phone-dial-option .opt-code{font-size:12px;color:var(--muted);font-weight:500;flex-shrink:0}
+.phone-dial-btn.open .dial-caret{transform:rotate(180deg)}
+
+/* Panneau liste déroulante */
+.phone-dial-dropdown{
+  position:absolute;top:calc(100% + 6px);left:0;z-index:600;
+  background:var(--white);
+  border:1px solid rgba(27,46,122,.15);
+  border-radius:6px;
+  box-shadow:0 12px 36px rgba(27,46,122,.16);
+  min-width:256px;max-height:260px;overflow:hidden;
+  display:none;flex-direction:column;
+}
+.phone-dial-dropdown.open{display:flex}
+
+/* Barre de recherche sticky */
+.phone-dial-search{
+  padding:8px 10px;
+  border-bottom:1px solid rgba(27,46,122,.08);
+  background:var(--white);flex-shrink:0;
+}
+.phone-dial-search input{
+  width:100%;border:1px solid rgba(27,46,122,.18);
+  border-radius:4px;padding:6px 10px 6px 30px;
+  font-size:12.5px;color:var(--ink);outline:none;
+  font-family:'Inter',sans-serif;
+  background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") 8px center no-repeat;
+}
+.phone-dial-search input:focus{border-color:var(--blue)}
+
+/* Liste scrollable */
+.phone-dial-list{overflow-y:auto;flex:1}
+
+/* Chaque option */
+.phone-dial-option{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;cursor:pointer;
+  transition:background .12s;
+}
+.phone-dial-option:hover,.phone-dial-option:focus{background:#EEF2FF}
+.phone-dial-option.selected{background:#EEF2FF}
+.phone-dial-option .opt-flag{font-size:20px;flex-shrink:0;width:26px;text-align:center;line-height:1}
+.phone-dial-option .opt-name{flex:1;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phone-dial-option .opt-code{font-size:12.5px;color:var(--muted);font-weight:500;flex-shrink:0}
 
 /* ═══════════════════════════════════════════
    FLATPICKR — THÈME PERSONNALISÉ
@@ -1540,12 +1552,12 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
           <div class="cancel-title">Saisir votre référence</div>
           <div class="cancel-sub">
             Votre référence de réservation vous a été communiquée par e-mail
-            au moment de votre réservation (format : <strong>QPGH-XXXX-XXXX</strong>).
+            au moment de votre réservation (format : <strong>QP-2026-XXXX</strong>).
           </div>
           <div class="form-group" style="margin-bottom:14px">
             <label class="form-label">Référence de réservation *</label>
             <input class="form-input" id="cancel-ref-input" type="text"
-              placeholder="Ex : QPGH-2026-0001"
+              placeholder="Ex : QP-2026-1234"
               style="text-transform:uppercase;letter-spacing:.05em;font-weight:500"
               oninput="this.value=this.value.toUpperCase()"
               onkeydown="if(event.key==='Enter') rechercherResa()">
@@ -2882,44 +2894,104 @@ function closeAptDetail() {
 // ─────────────────────────────────────────────────────────
 // FORMULAIRE RÉSERVATION (réutilisable)
 // ─────────────────────────────────────────────────────────
-// Indicatifs pays disponibles
+// Indicatifs pays — liste complète triée (Bénin en premier)
 var PHONE_CODES = [
-  { code: '+229', flag: '🇧🇯', name: 'Bénin' },
-  { code: '+225', flag: '🇨🇮', name: "Côte d'Ivoire" },
-  { code: '+221', flag: '🇸🇳', name: 'Sénégal' },
-  { code: '+223', flag: '🇲🇱', name: 'Mali' },
-  { code: '+226', flag: '🇧🇫', name: 'Burkina Faso' },
-  { code: '+228', flag: '🇹🇬', name: 'Togo' },
-  { code: '+237', flag: '🇨🇲', name: 'Cameroun' },
-  { code: '+243', flag: '🇨🇩', name: 'RD Congo' },
-  { code: '+33',  flag: '🇫🇷', name: 'France' },
-  { code: '+1',   flag: '🇺🇸', name: 'USA/Canada' },
-  { code: '+32',  flag: '🇧🇪', name: 'Belgique' },
-  { code: '+41',  flag: '🇨🇭', name: 'Suisse' },
+  { code:'+229', flag:'🇧🇯', name:'Bénin' },
+  { code:'+213', flag:'🇩🇿', name:'Algérie' },
+  { code:'+244', flag:'🇦🇴', name:'Angola' },
+  { code:'+32',  flag:'🇧🇪', name:'Belgique' },
+  { code:'+226', flag:'🇧🇫', name:'Burkina Faso' },
+  { code:'+257', flag:'🇧🇮', name:'Burundi' },
+  { code:'+238', flag:'🇨🇻', name:'Cap-Vert' },
+  { code:'+236', flag:'🇨🇫', name:'Centrafrique' },
+  { code:'+269', flag:'🇰🇲', name:'Comores' },
+  { code:'+242', flag:'🇨🇬', name:'Congo' },
+  { code:'+243', flag:'🇨🇩', name:'Congo (RDC)' },
+  { code:'+225', flag:'🇨🇮', name:"Côte d'Ivoire" },
+  { code:'+253', flag:'🇩🇯', name:'Djibouti' },
+  { code:'+20',  flag:'🇪🇬', name:'Égypte' },
+  { code:'+240', flag:'🇬🇶', name:'Guinée Équat.' },
+  { code:'+291', flag:'🇪🇷', name:'Érythrée' },
+  { code:'+251', flag:'🇪🇹', name:'Éthiopie' },
+  { code:'+241', flag:'🇬🇦', name:'Gabon' },
+  { code:'+220', flag:'🇬🇲', name:'Gambie' },
+  { code:'+233', flag:'🇬🇭', name:'Ghana' },
+  { code:'+224', flag:'🇬🇳', name:'Guinée' },
+  { code:'+245', flag:'🇬🇼', name:'Guinée-Bissau' },
+  { code:'+254', flag:'🇰🇪', name:'Kenya' },
+  { code:'+266', flag:'🇱🇸', name:'Lesotho' },
+  { code:'+231', flag:'🇱🇷', name:'Libéria' },
+  { code:'+218', flag:'🇱🇾', name:'Libye' },
+  { code:'+261', flag:'🇲🇬', name:'Madagascar' },
+  { code:'+265', flag:'🇲🇼', name:'Malawi' },
+  { code:'+223', flag:'🇲🇱', name:'Mali' },
+  { code:'+222', flag:'🇲🇷', name:'Mauritanie' },
+  { code:'+230', flag:'🇲🇺', name:'Maurice' },
+  { code:'+212', flag:'🇲🇦', name:'Maroc' },
+  { code:'+258', flag:'🇲🇿', name:'Mozambique' },
+  { code:'+264', flag:'🇳🇦', name:'Namibie' },
+  { code:'+227', flag:'🇳🇪', name:'Niger' },
+  { code:'+234', flag:'🇳🇬', name:'Nigéria' },
+  { code:'+250', flag:'🇷🇼', name:'Rwanda' },
+  { code:'+239', flag:'🇸🇹', name:'São Tomé' },
+  { code:'+221', flag:'🇸🇳', name:'Sénégal' },
+  { code:'+248', flag:'🇸🇨', name:'Seychelles' },
+  { code:'+232', flag:'🇸🇱', name:'Sierra Leone' },
+  { code:'+252', flag:'🇸🇴', name:'Somalie' },
+  { code:'+27',  flag:'🇿🇦', name:'Afrique du Sud' },
+  { code:'+249', flag:'🇸🇩', name:'Soudan' },
+  { code:'+211', flag:'🇸🇸', name:'Soudan du Sud' },
+  { code:'+268', flag:'🇸🇿', name:'Eswatini' },
+  { code:'+255', flag:'🇹🇿', name:'Tanzanie' },
+  { code:'+228', flag:'🇹🇬', name:'Togo' },
+  { code:'+216', flag:'🇹🇳', name:'Tunisie' },
+  { code:'+256', flag:'🇺🇬', name:'Ouganda' },
+  { code:'+260', flag:'🇿🇲', name:'Zambie' },
+  { code:'+263', flag:'🇿🇼', name:'Zimbabwe' },
+  { code:'+237', flag:'🇨🇲', name:'Cameroun' },
+  // Europe & Amériques
+  { code:'+33',  flag:'🇫🇷', name:'France' },
+  { code:'+41',  flag:'🇨🇭', name:'Suisse' },
+  { code:'+1',   flag:'🇺🇸', name:'USA / Canada' },
+  { code:'+44',  flag:'🇬🇧', name:'Royaume-Uni' },
+  { code:'+49',  flag:'🇩🇪', name:'Allemagne' },
+  { code:'+34',  flag:'🇪🇸', name:'Espagne' },
+  { code:'+39',  flag:'🇮🇹', name:'Italie' },
+  { code:'+351', flag:'🇵🇹', name:'Portugal' },
+  { code:'+55',  flag:'🇧🇷', name:'Brésil' },
+  { code:'+86',  flag:'🇨🇳', name:'Chine' },
+  { code:'+91',  flag:'🇮🇳', name:'Inde' },
+  { code:'+971', flag:'🇦🇪', name:'Émirats Arabes' },
+  { code:'+966', flag:'🇸🇦', name:'Arabie Saoudite' },
 ];
 
 function buildPhoneCodeSelect(prefix) {
-  var defaultCode = PHONE_CODES[0]; // Bénin +229
-  var optItems = PHONE_CODES.map(function(c) {
-    return '<div class="phone-dial-option'+(c.code==='+229'?' selected':'')+'" '
+  var def = PHONE_CODES[0]; // Bénin
+  var items = PHONE_CODES.map(function(c) {
+    return '<div class="phone-dial-option'+(c.code===def.code?' selected':'')+'" '
       +'data-code="'+c.code+'" data-flag="'+c.flag+'" data-name="'+c.name+'" '
-      +'onclick="dialSelect(this,\''+prefix+'\')">'
+      +'tabindex="0" role="option" '
+      +'onclick="dialSelect(this,\''+prefix+'\')" '
+      +'onkeydown="if(event.key===\'Enter\'||event.key===\' \')dialSelect(this,\''+prefix+'\')">'
       +'<span class="opt-flag">'+c.flag+'</span>'
       +'<span class="opt-name">'+c.name+'</span>'
       +'<span class="opt-code">'+c.code+'</span>'
       +'</div>';
   }).join('');
-  return '<input type="hidden" id="'+prefix+'-tel-code" value="'+defaultCode.code+'">'
+
+  return '<input type="hidden" id="'+prefix+'-tel-code" value="'+def.code+'">'
     +'<button type="button" class="phone-dial-btn" id="'+prefix+'-dial-btn" '
-    +'onclick="toggleDial(event,\''+prefix+'\')" aria-haspopup="listbox">'
-    +'<span class="dial-flag" id="'+prefix+'-dial-flag">'+defaultCode.flag+'</span>'
-    +'<span class="dial-code" id="'+prefix+'-dial-code">'+defaultCode.code+'</span>'
-    +'<span class="dial-arrow">▼</span>'
+    +'onclick="toggleDial(event,\''+prefix+'\')" aria-haspopup="listbox" aria-expanded="false">'
+    +'<span class="dial-flag" id="'+prefix+'-dial-flag">'+def.flag+'</span>'
+    +'<span class="dial-code" id="'+prefix+'-dial-code">'+def.code+'</span>'
+    +'<span class="dial-caret">▼</span>'
     +'</button>'
-    +'<div class="phone-dial-dropdown" id="'+prefix+'-dial-drop">'
-    +'<div class="phone-dial-search"><input type="text" placeholder="Rechercher un pays…" '
-    +'oninput="filterDial(this,\''+prefix+'\')" autocomplete="off"></div>'
-    +'<div id="'+prefix+'-dial-list">'+optItems+'</div>'
+    +'<div class="phone-dial-dropdown" id="'+prefix+'-dial-drop" role="listbox">'
+    +'<div class="phone-dial-search">'
+    +'<input type="text" placeholder="Rechercher un pays…" autocomplete="off" '
+    +'oninput="filterDial(this,\''+prefix+'\')">'
+    +'</div>'
+    +'<div class="phone-dial-list" id="'+prefix+'-dial-list">'+items+'</div>'
     +'</div>';
 }
 
@@ -2927,55 +2999,62 @@ function toggleDial(e, prefix) {
   e.stopPropagation();
   var btn  = document.getElementById(prefix+'-dial-btn');
   var drop = document.getElementById(prefix+'-dial-drop');
-  if (!btn || !drop) return;
-  var isOpen = drop.classList.contains('open');
-  // Close all dropdowns first
+  if(!btn||!drop) return;
+  var opening = !drop.classList.contains('open');
+  // Fermer tous les dropdowns ouverts
   document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){ d.classList.remove('open'); });
-  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){ b.classList.remove('open'); });
-  if (!isOpen) {
+  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){ b.classList.remove('open'); b.setAttribute('aria-expanded','false'); });
+  if(opening) {
     drop.classList.add('open');
     btn.classList.add('open');
+    btn.setAttribute('aria-expanded','true');
     var si = drop.querySelector('input');
-    if (si) { si.value = ''; filterDial(si, prefix); si.focus(); }
+    if(si){ si.value=''; filterDial(si, prefix); setTimeout(function(){ si.focus(); },50); }
+    // Scroll vers l'option sélectionnée
+    var sel = document.querySelector('#'+prefix+'-dial-list .phone-dial-option.selected');
+    if(sel) setTimeout(function(){ sel.scrollIntoView({block:'nearest'}); },60);
   }
 }
 
 function dialSelect(optEl, prefix) {
   var code = optEl.getAttribute('data-code');
   var flag = optEl.getAttribute('data-flag');
-  document.getElementById(prefix+'-tel-code').value = code;
-  document.getElementById(prefix+'-dial-flag').textContent = flag;
-  document.getElementById(prefix+'-dial-code').textContent = code;
-  // Mark selected
+  var hidden = document.getElementById(prefix+'-tel-code');
+  var flagEl = document.getElementById(prefix+'-dial-flag');
+  var codeEl = document.getElementById(prefix+'-dial-code');
+  if(hidden) hidden.value = code;
+  if(flagEl) flagEl.textContent = flag;
+  if(codeEl) codeEl.textContent = code;
+  // Marquer sélectionné
   var list = document.getElementById(prefix+'-dial-list');
-  if (list) list.querySelectorAll('.phone-dial-option').forEach(function(o){
+  if(list) list.querySelectorAll('.phone-dial-option').forEach(function(o){
     o.classList.toggle('selected', o===optEl);
   });
-  // Close
+  // Fermer
   var drop = document.getElementById(prefix+'-dial-drop');
   var btn  = document.getElementById(prefix+'-dial-btn');
-  if (drop) drop.classList.remove('open');
-  if (btn)  btn.classList.remove('open');
-  // Focus phone number input
+  if(drop){ drop.classList.remove('open'); }
+  if(btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+  // Mettre le focus sur le champ numéro
   var tel = document.getElementById(prefix+'-tel');
-  if (tel) tel.focus();
+  if(tel) tel.focus();
 }
 
 function filterDial(input, prefix) {
-  var q = input.value.toLowerCase();
+  var q = (input.value||'').toLowerCase().trim();
   var list = document.getElementById(prefix+'-dial-list');
-  if (!list) return;
-  list.querySelectorAll('.phone-dial-option').forEach(function(o) {
-    var name = (o.getAttribute('data-name')||'').toLowerCase();
-    var code = (o.getAttribute('data-code')||'').toLowerCase();
-    o.style.display = (!q || name.indexOf(q)>=0 || code.indexOf(q)>=0) ? '' : 'none';
+  if(!list) return;
+  list.querySelectorAll('.phone-dial-option').forEach(function(o){
+    var n = (o.getAttribute('data-name')||'').toLowerCase();
+    var c = (o.getAttribute('data-code')||'').toLowerCase();
+    o.style.display = (!q || n.indexOf(q)>=0 || c.indexOf(q)>=0) ? '' : 'none';
   });
 }
 
-// Close dialDropdowns on outside click
-document.addEventListener('click', function() {
+// Fermer les dropdowns au clic extérieur
+document.addEventListener('click', function(){
   document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){ d.classList.remove('open'); });
-  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){ b.classList.remove('open'); });
+  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){ b.classList.remove('open'); b.setAttribute('aria-expanded','false'); });
 });
 
 function buildPaymentMethods(prefix) {
@@ -3122,25 +3201,25 @@ async function submitResa(prefix, aptId) {
     return opt ? opt.textContent.trim() : 'MTN MoMo';
   })();
   var errShown=false;
-  // Valider le nom
+  // Validation indépendante de chaque champ
   var nomErr=document.getElementById(prefix+'-nom-err');
   if(nomErr) nomErr.classList.remove('show');
   if(!nom.trim()&&nomErr){nomErr.classList.add('show');errShown=true;}
-  // Valider le téléphone (numéro seul, hors indicatif)
+  // Téléphone : valider le numéro saisi (pas l'indicatif)
   var telErr=document.getElementById(prefix+'-tel-err');
   if(telErr) telErr.classList.remove('show');
   if(!num.trim()&&telErr){telErr.classList.add('show');errShown=true;}
-  // Valider email
-  var emailErr=document.getElementById(prefix+'-email-err');
-  if(emailErr) emailErr.classList.remove('show');
-  if(!email.trim()&&emailErr){emailErr.classList.add('show');errShown=true;}
-  // Valider dates
-  var arrErr=document.getElementById(prefix+'-arr-err');
-  var depErr=document.getElementById(prefix+'-dep-err');
-  if(arrErr) arrErr.classList.remove('show');
-  if(depErr) depErr.classList.remove('show');
-  if(!arr&&arrErr){arrErr.classList.add('show');errShown=true;}
-  if(!dep&&depErr){depErr.classList.add('show');errShown=true;}
+  // Email
+  var emailErrEl=document.getElementById(prefix+'-email-err');
+  if(emailErrEl) emailErrEl.classList.remove('show');
+  if(!email.trim()&&emailErrEl){emailErrEl.classList.add('show');errShown=true;}
+  // Dates
+  var arrErrEl=document.getElementById(prefix+'-arr-err');
+  var depErrEl=document.getElementById(prefix+'-dep-err');
+  if(arrErrEl) arrErrEl.classList.remove('show');
+  if(depErrEl) depErrEl.classList.remove('show');
+  if(!arr&&arrErrEl){arrErrEl.classList.add('show');errShown=true;}
+  if(!dep&&depErrEl){depErrEl.classList.add('show');errShown=true;}
   if(errShown) return;
   if(!/^[^@]+@[^@]+\.[^@]+$/.test(email)){
     var ee=document.getElementById(prefix+'-email-err');
@@ -3335,7 +3414,7 @@ function cancelGoBack() {
   cancelHideError('cancel-err-2');
 }
 
-// Étape 1 → recherche de la réservation
+// Étape 1 → recherche de la réservation (directement via Supabase)
 async function rechercherResa() {
   cancelHideError('cancel-err-1');
   var ref = ((document.getElementById('cancel-ref-input')||{}).value||'').trim().toUpperCase();
@@ -3350,24 +3429,43 @@ async function rechercherResa() {
   if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Recherche…'; }
 
   try {
-    var res = await fetch(CANCEL_FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reference: ref, action: 'lookup' })
-    });
-    var data = await res.json();
+    // Recherche directement dans Supabase sans passer par l'Edge Function
+    var result = await sb.from('reservations')
+      .select('id, reference, statut, statut_paiement, client_nom, client_tel, client_email, date_arrivee, date_depart, montant_total, methode_paiement, appartement_id, appartements(nom, adresse, ville)')
+      .eq('reference', ref)
+      .neq('statut', 'annule')
+      .maybeSingle();
 
-    if(!res.ok || !data.ok) {
-      cancelShowError('cancel-err-1', data.error || 'Réservation introuvable. Vérifiez la référence.');
+    if(result.error) throw new Error(result.error.message);
+
+    if(!result.data) {
+      cancelShowError('cancel-err-1', 'Réservation introuvable. Vérifiez la référence ou cette réservation a déjà été annulée.');
       return;
     }
 
-    _cancelResaData = data.reservation;
-    renderResaPreview(data.reservation);
+    var r = result.data;
+    // Normaliser les champs pour renderResaPreview
+    var apt = r.appartements || {};
+    _cancelResaData = {
+      id:               r.id,
+      reference:        r.reference,
+      statut:           r.statut,
+      statut_paiement:  r.statut_paiement,
+      client_nom:       r.client_nom,
+      client_tel:       r.client_tel,
+      client_email:     r.client_email,
+      date_arrivee:     r.date_arrivee,
+      date_depart:      r.date_depart,
+      montant_total:    r.montant_total,
+      methode_paiement: r.methode_paiement,
+      apt_nom:          apt.nom || '—',
+      apt_adresse:      apt.adresse || (apt.ville || 'Cotonou, Bénin'),
+    };
+    renderResaPreview(_cancelResaData);
     cancelShowStep(2);
 
   } catch(e) {
-    cancelShowError('cancel-err-1', 'Erreur de connexion. Réessayez dans un instant.');
+    cancelShowError('cancel-err-1', 'Erreur de connexion : ' + (e.message || 'Réessayez dans un instant.'));
   } finally {
     if(btn) { btn.disabled=false; btn.textContent='Rechercher ma réservation →'; }
   }
@@ -3399,7 +3497,7 @@ function renderResaPreview(r) {
   if(warn) warn.style.display = 'block';
 }
 
-// Étape 2 → confirmation d'annulation
+// Étape 2 → confirmation d'annulation (mise à jour directe Supabase)
 async function confirmerAnnulation() {
   if(!_cancelResaData) { cancelGoBack(); return; }
   cancelHideError('cancel-err-2');
@@ -3408,24 +3506,32 @@ async function confirmerAnnulation() {
   if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Annulation…'; }
 
   try {
-    var res = await fetch(CANCEL_FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reference: _cancelResaData.reference, action: 'confirm' })
-    });
-    var data = await res.json();
+    // Mettre à jour le statut directement dans Supabase
+    var result = await sb.from('reservations')
+      .update({ statut: 'annule' })
+      .eq('reference', _cancelResaData.reference)
+      .eq('id', _cancelResaData.id);
 
-    if(!res.ok || !data.ok) {
-      cancelShowError('cancel-err-2', data.error || 'Une erreur est survenue. Réessayez.');
-      return;
-    }
+    if(result.error) throw new Error(result.error.message);
+
+    // Tentative d'alerte via WhatsApp (non bloquante)
+    try {
+      var waMsg = encodeURIComponent(
+        '❌ Annulation de réservation\nRéf : ' + _cancelResaData.reference
+        + '\nClient : ' + _cancelResaData.client_nom
+        + '\nArrivée : ' + fmtDate(_cancelResaData.date_arrivee)
+        + '\nDépart : ' + fmtDate(_cancelResaData.date_depart)
+      );
+      // Log seulement — pas d'ouverture automatique pour ne pas perturber l'UX
+      console.log('[Annulation] Notification WhatsApp gérant :', 'https://wa.me/'+WHATSAPP_NUMBER+'?text='+waMsg);
+    } catch(_) {}
 
     // Succès
     var msgEl = document.getElementById('cancel-success-msg');
     if(msgEl) {
       msgEl.innerHTML = 'Votre réservation <strong>'+_cancelResaData.reference+'</strong>'
         +' a bien été annulée.<br><br>'
-        +'Un e-mail et un message WhatsApp de confirmation vous ont été envoyés.<br><br>'
+        +'Le gérant a été notifié. Un e-mail de confirmation vous sera envoyé.<br><br>'
         +'<span style="color:#e07b00;font-size:13px">⚠️ Conformément aux conditions de réservation, '
         +'l\'acompte de <strong>5 000 FCFA</strong> versé lors de la réservation '
         +'est non remboursable.</span>';
@@ -3435,7 +3541,7 @@ async function confirmerAnnulation() {
     _cancelResaData = null;
 
   } catch(e) {
-    cancelShowError('cancel-err-2','Erreur de connexion. Réessayez dans un instant.');
+    cancelShowError('cancel-err-2', 'Erreur : ' + (e.message || 'Réessayez dans un instant.'));
   } finally {
     if(btn) { btn.disabled=false; btn.textContent='Confirmer l\'annulation'; }
   }
