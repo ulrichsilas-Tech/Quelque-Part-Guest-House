@@ -14,6 +14,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Flatpickr — sélecteur de dates avec désactivation des périodes réservées -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
 
 <style>
 /* ═══════════════════════════════════════════
@@ -955,6 +959,112 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 /* Erreur */
 .cancel-error-box{background:#fff5f5;border:1px solid #f5c6cb;border-radius:var(--radius);
   padding:12px 14px;font-size:13px;color:#721c24;margin-top:12px;display:none;line-height:1.6}
+/* ═══════════════════════════════════════════
+   CHAMP TÉLÉPHONE AVEC INDICATIF
+═══════════════════════════════════════════ */
+.phone-field{display:flex;gap:0}
+.phone-flag-select{
+  background:var(--white);border:1px solid var(--border);
+  border-right:none;border-radius:var(--radius) 0 0 var(--radius);
+  padding:0 8px;font-size:13px;color:var(--ink);
+  cursor:pointer;min-width:90px;outline:none;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+  padding-right:22px;
+}
+.phone-flag-select:focus{border-color:var(--blue);z-index:1}
+.phone-number-input{
+  border-radius:0 var(--radius) var(--radius) 0!important;
+  flex:1;
+}
+
+/* ═══════════════════════════════════════════
+   FLATPICKR — THÈME PERSONNALISÉ
+═══════════════════════════════════════════ */
+.flatpickr-calendar{
+  font-family:'Inter',sans-serif!important;
+  box-shadow:0 8px 32px rgba(0,0,0,.15)!important;
+  border-radius:8px!important;
+  border:1px solid var(--border)!important;
+}
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover{
+  background:#fef2f2!important;
+  color:#fca5a5!important;
+  text-decoration:line-through!important;
+  cursor:not-allowed!important;
+}
+.flatpickr-day.selected,.flatpickr-day.selected:hover{
+  background:var(--blue)!important;
+  border-color:var(--blue)!important;
+}
+.flatpickr-day.inRange{
+  background:rgba(15,28,92,.08)!important;
+  border-color:rgba(15,28,92,.08)!important;
+}
+.flatpickr-day.startRange,.flatpickr-day.endRange{
+  background:var(--blue)!important;
+  border-color:var(--blue)!important;
+}
+.flatpickr-months .flatpickr-month{background:var(--blue)!important;color:#fff!important}
+.flatpickr-current-month .flatpickr-monthDropdown-months{color:#fff!important}
+.flatpickr-weekday{color:var(--muted)!important;font-weight:500}
+.numInputWrapper span{border-color:rgba(255,255,255,.3)!important}
+.flatpickr-prev-month svg,.flatpickr-next-month svg{fill:#fff!important}
+.flatpickr-legend{
+  display:flex;gap:14px;flex-wrap:wrap;
+  font-size:11px;color:var(--muted);margin-top:8px;align-items:center;
+}
+.flatpickr-legend-item{display:flex;align-items:center;gap:4px}
+.leg-dot{width:12px;height:12px;border-radius:2px;display:inline-block}
+.leg-dispo{background:rgba(15,28,92,.15)}
+.leg-indispo{background:#fef2f2;border:1px solid #fca5a5}
+.leg-sel{background:var(--blue)}
+
+/* ═══════════════════════════════════════════
+   SUPER ADMIN
+═══════════════════════════════════════════ */
+.super-admin-only{display:none}
+.is-super-admin .super-admin-only{display:block}
+.admin-role-badge{
+  display:inline-block;padding:2px 8px;border-radius:3px;
+  font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+}
+.role-super{background:rgba(245,166,35,.2);color:#d4971a}
+.role-admin{background:rgba(255,255,255,.07);color:rgba(255,255,255,.5)}
+.admin-user-row{
+  display:grid;grid-template-columns:1fr auto auto;
+  align-items:center;gap:12px;padding:10px 14px;
+  background:rgba(255,255,255,.03);border-radius:6px;
+  border:1px solid rgba(255,255,255,.06);margin-bottom:6px;
+}
+.admin-user-email{font-size:13px;color:rgba(255,255,255,.8)}
+.admin-user-meta{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+
+/* ═══════════════════════════════════════════
+   MÉTHODES PAIEMENT CONFIGURABLES
+═══════════════════════════════════════════ */
+.pay-method-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);border-radius:6px;margin-bottom:6px;
+}
+.pay-method-label{font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:8px}
+.toggle-switch{
+  position:relative;width:36px;height:20px;flex-shrink:0;cursor:pointer;
+}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{
+  position:absolute;inset:0;background:#333;border-radius:10px;
+  transition:background .2s;
+}
+.toggle-switch input:checked+.toggle-track{background:var(--gold)}
+.toggle-thumb{
+  position:absolute;top:2px;left:2px;width:16px;height:16px;
+  background:#fff;border-radius:50%;transition:transform .2s;
+}
+.toggle-switch input:checked~.toggle-thumb{transform:translateX(16px)}
 </style>
 </head>
 <body>
@@ -1532,6 +1642,7 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
       </div>
       <div style="display:flex;align-items:center;gap:12px">
         <span style="font-size:12px;color:rgba(255,255,255,.4)" id="admin-email-display"></span>
+        <span id="admin-role-badge" class="admin-role-badge role-admin" style="margin-left:6px">Admin</span>
         <button class="admin-logout" onclick="adminLogout()">Déconnexion</button>
       </div>
     </div>
@@ -1929,12 +2040,37 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
         <!-- ── UTILISATEURS ── -->
         <div class="admin-section" id="sec-utilisateurs">
           <div class="admin-page-title">Utilisateurs administrateurs</div>
-          <div style="display:flex;gap:8px;margin-bottom:16px">
-            <button class="admin-primary-btn" onclick="showAddUserModal()">+ Inviter un admin</button>
+
+          <!-- Info accès visible par tous -->
+          <div class="admin-card" style="padding:14px;margin-bottom:12px">
+            <div style="font-size:13px;color:rgba(255,255,255,.55);line-height:1.7">
+              Les accès administrateurs sont gérés via <strong style="color:#d4af37">Supabase Auth</strong>.
+              Seul le <strong style="color:#d4af37">Super Admin</strong> peut ajouter, désactiver ou supprimer un compte administrateur.
+            </div>
           </div>
-          <div class="admin-card">
-            <div class="admin-card-header"><div class="admin-card-title">Administrateurs actifs</div></div>
-            <div id="users-list"></div>
+
+          <!-- Actions Super Admin uniquement -->
+          <div class="super-admin-only">
+            <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+              <button class="admin-primary-btn" onclick="showAddUserModal()">+ Ajouter un administrateur</button>
+              <button class="admin-sm-btn" onclick="loadUtilisateurs()">🔄 Actualiser</button>
+            </div>
+            <div class="admin-card">
+              <div class="admin-card-header">
+                <div class="admin-card-title">Comptes administrateurs</div>
+              </div>
+              <div id="users-list" style="padding:12px"></div>
+            </div>
+          </div>
+
+          <!-- Message pour les admins non-super -->
+          <div id="users-non-super" style="display:block">
+            <div class="admin-card" style="padding:20px;text-align:center">
+              <div style="font-size:32px;margin-bottom:10px">🔒</div>
+              <div style="font-size:13px;color:rgba(255,255,255,.4)">
+                La gestion des administrateurs est réservée au Super Admin.
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1955,6 +2091,18 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
                   <input class="admin-input" type="number" id="param-min-nuits" value="1" min="1"></div>
               </div>
               <button class="admin-sm-btn" onclick="saveParametres()">💾 Sauvegarder les paramètres</button>
+            </div>
+
+            <!-- ── Moyens de paiement ── -->
+            <div class="admin-card" style="padding:16px">
+              <div class="admin-card-title" style="margin-bottom:6px">💳 Moyens de paiement</div>
+              <p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 14px;line-height:1.6">
+                Activez ou désactivez les moyens de paiement proposés aux clients lors de la réservation.
+                Feexpay sera disponible après intégration finale.
+              </p>
+              <div id="pay-methods-config"></div>
+              <button class="admin-sm-btn" onclick="savePaymentMethods()" style="margin-top:10px">💾 Sauvegarder</button>
+              <div id="pay-methods-feedback" style="font-size:12px;color:#4caf50;margin-top:8px;display:none"></div>
             </div>
             <div class="admin-card" style="padding:16px">
               <div class="admin-card-title" style="margin-bottom:12px">Réseaux sociaux</div>
@@ -2048,10 +2196,22 @@ var SUPABASE_ANON_KEY = 'sb_publishable_zgAfWEsBGlbu2yffNMAShg_EoDCmmnp';
 var WHATSAPP_NUMBER = '22900000000';
 
 // ── Emails transactionnels — Backend Resend via Supabase Edge Functions ───────
-// URL de la Edge Function déployée (Supabase Dashboard → Edge Functions → send-email)
 var EDGE_FUNCTION_URL = 'https://utyimnjxgfeevdhrmgyc.supabase.co/functions/v1/send-email';
-// Emails des administrateurs (identiques aux secrets ADMIN_EMAILS côté serveur)
 var ADMIN_EMAILS_JS   = 'gerant1@mail.com,gerant2@mail.com';
+
+// ── Super Admin — email du compte avec droits étendus ────────────────────────
+// Renseigner l'email du compte Super Admin (doit correspondre au compte Supabase Auth)
+var SUPER_ADMIN_EMAIL = 'superadmin@votredomaine.com';
+
+// ── Méthodes de paiement actives (modifiable depuis Admin → Paramètres) ───────
+// Ces valeurs sont écrasées au chargement si des paramètres Supabase existent
+var METHODES_PAIEMENT = [
+  { id: 'mtn',     label: 'MTN MoMo',    icon: '📱', actif: true  },
+  { id: 'moov',    label: 'Moov Money',  icon: '📱', actif: true  },
+  { id: 'wave',    label: 'Wave',        icon: '📱', actif: false },
+  { id: 'feexpay', label: 'Feexpay',     icon: '💳', actif: false },
+  { id: 'carte',   label: 'Carte',       icon: '💳', actif: false },
+];
 // ─────────────────────────────────────────────────────────
 
 // Client Supabase principal (lecture publique)
@@ -2668,7 +2828,8 @@ async function openAptDetail(aptId) {
   document.getElementById('det-book-title').textContent = apt.nom;
   document.getElementById('det-book-sub').textContent = apt.ville+' · '+fmt(apt.prix_nuit)+' FCFA / nuit';
   document.getElementById('det-book-body').innerHTML = buildBookForm('det', apt);
-
+  // Initialiser Flatpickr avec les dates indisponibles
+  setTimeout(function(){ initFlatpickrForApt('det', apt.id, apt); }, 50);
   window.scrollTo(0,0);
 }
 
@@ -2685,6 +2846,39 @@ function closeAptDetail() {
 // ─────────────────────────────────────────────────────────
 // FORMULAIRE RÉSERVATION (réutilisable)
 // ─────────────────────────────────────────────────────────
+// Indicatifs pays disponibles
+var PHONE_CODES = [
+  { code: '+229', flag: '🇧🇯', name: 'Bénin' },
+  { code: '+225', flag: '🇨🇮', name: "Côte d'Ivoire" },
+  { code: '+221', flag: '🇸🇳', name: 'Sénégal' },
+  { code: '+223', flag: '🇲🇱', name: 'Mali' },
+  { code: '+226', flag: '🇧🇫', name: 'Burkina Faso' },
+  { code: '+228', flag: '🇹🇬', name: 'Togo' },
+  { code: '+237', flag: '🇨🇲', name: 'Cameroun' },
+  { code: '+243', flag: '🇨🇩', name: 'RD Congo' },
+  { code: '+33',  flag: '🇫🇷', name: 'France' },
+  { code: '+1',   flag: '🇺🇸', name: 'USA/Canada' },
+  { code: '+32',  flag: '🇧🇪', name: 'Belgique' },
+  { code: '+41',  flag: '🇨🇭', name: 'Suisse' },
+];
+
+function buildPhoneCodeSelect(prefix) {
+  var opts = PHONE_CODES.map(function(c) {
+    return '<option value="'+c.code+'"'+(c.code==='+229'?' selected':'')+'>'+c.flag+' '+c.code+' — '+c.name+'</option>';
+  }).join('');
+  return '<select class="phone-flag-select" id="'+prefix+'-tel-code">'+opts+'</select>';
+}
+
+function buildPaymentMethods(prefix) {
+  var actives = METHODES_PAIEMENT.filter(function(m){ return m.actif; });
+  if (!actives.length) return '<div style="font-size:12px;color:var(--muted);padding:8px 0">Aucun moyen de paiement disponible pour le moment.</div>';
+  var cols = actives.length <= 2 ? actives.length : 3;
+  var opts = actives.map(function(m, i) {
+    return '<div class="pay-opt'+(i===0?' selected':'')+'" data-pay-id="'+m.id+'" onclick="selPay(this,\''+prefix+'\')"><span class="pay-icon">'+m.icon+'</span>'+m.label+'</div>';
+  }).join('');
+  return '<div class="pay-methods" style="grid-template-columns:repeat('+cols+',1fr)">'+opts+'</div>';
+}
+
 function buildBookForm(prefix, apt) {
   return '<div class="form-group">'
     +'<label class="form-label">Nom complet *</label>'
@@ -2693,7 +2887,9 @@ function buildBookForm(prefix, apt) {
     +'</div>'
     +'<div class="form-row">'
     +'<div class="form-group"><label class="form-label">Téléphone *</label>'
-    +'<input class="form-input" id="'+prefix+'-tel" type="tel" placeholder="+229 xxxxxxxx">'
+    +'<div class="phone-field">'+buildPhoneCodeSelect(prefix)
+    +'<input class="form-input phone-number-input" id="'+prefix+'-tel" type="tel" placeholder="97 00 00 00">'
+    +'</div>'
     +'<div class="form-error" id="'+prefix+'-tel-err">Téléphone requis</div></div>'
     +'<div class="form-group"><label class="form-label">E-mail *</label>'
     +'<input class="form-input" id="'+prefix+'-email" type="email" placeholder="email@exemple.com">'
@@ -2701,12 +2897,13 @@ function buildBookForm(prefix, apt) {
     +'</div>'
     +'<div class="form-row">'
     +'<div class="form-group"><label class="form-label">Arrivée *</label>'
-    +'<input class="form-input" id="'+prefix+'-arr" type="date" min="'+todayISO()+'" value="'+todayISO()+'" oninput="updateBookPrice(\''+prefix+'\','+JSON.stringify(apt)+')">'
+    +'<input class="form-input" id="'+prefix+'-arr" type="text" placeholder="Choisir une date" readonly>'
     +'</div>'
     +'<div class="form-group"><label class="form-label">Départ *</label>'
-    +'<input class="form-input" id="'+prefix+'-dep" type="date" min="'+tomorrowISO()+'" value="'+tomorrowISO()+'" oninput="updateBookPrice(\''+prefix+'\','+JSON.stringify(apt)+')">'
+    +'<input class="form-input" id="'+prefix+'-dep" type="text" placeholder="Choisir une date" readonly>'
     +'</div>'
     +'</div>'
+    +'<div class="flatpickr-legend"><div class="flatpickr-legend-item"><span class="leg-dot leg-dispo"></span>Disponible</div><div class="flatpickr-legend-item"><span class="leg-dot leg-indispo"></span>Réservé</div><div class="flatpickr-legend-item"><span class="leg-dot leg-sel"></span>Votre choix</div></div>'
     +'<div class="dispo-indicator" id="'+prefix+'-dispo"></div>'
     +'<div class="price-summary" id="'+prefix+'-price">'
     +'<div class="price-row"><span>Tarif par nuit</span><span>'+fmt(apt.prix_nuit)+' FCFA</span></div>'
@@ -2715,13 +2912,39 @@ function buildBookForm(prefix, apt) {
     +'<div class="price-total-row"><span>Total</span><span id="'+prefix+'-total">—</span></div>'
     +'</div>'
     +'<div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:12px 0 8px">Mode de paiement</div>'
-    +'<div class="pay-methods">'
-    +'<div class="pay-opt selected" onclick="selPay(this,\''+prefix+'\')"><span class="pay-icon">📱</span>MTN MoMo</div>'
-    +'<div class="pay-opt" onclick="selPay(this,\''+prefix+'\')"><span class="pay-icon">📱</span>Moov Money</div>'
-    +'<div class="pay-opt" onclick="selPay(this,\''+prefix+'\')"><span class="pay-icon">💳</span>Carte</div>'
-    +'</div>'
+    +buildPaymentMethods(prefix)
     +'<button class="btn-confirm" id="'+prefix+'-submit" onclick="submitResa(\''+prefix+'\',\''+apt.id+'\')">Confirmer et payer →</button>'
     +'<div class="secure-note">🔒 Paiement sécurisé · Confirmation e-mail immédiate · Sans compte</div>';
+}
+
+async function initFlatpickrForApt(prefix, aptId, apt) {
+  var { data: resas } = await sb.from('reservations')
+    .select('date_arrivee, date_depart')
+    .eq('appartement_id', aptId)
+    .in('statut', ['confirme','en_attente']);
+  var disabled = (resas || []).map(function(r){ return { from: r.date_arrivee, to: r.date_depart }; });
+  var fpDep = null;
+  var fpArr = flatpickr('#'+prefix+'-arr', {
+    locale:'fr', dateFormat:'Y-m-d', altInput:true, altFormat:'j F Y',
+    minDate: todayISO(), defaultDate: todayISO(), disable: disabled,
+    onChange: function(dates, str) {
+      if (!str || !fpDep) return;
+      var d = new Date(str); d.setDate(d.getDate()+1);
+      var nd = d.toISOString().slice(0,10);
+      fpDep.set('minDate', nd);
+      var cur = fpDep.selectedDates[0];
+      if (!cur || cur <= dates[0]) fpDep.setDate(nd);
+      updateBookPrice(prefix, apt);
+    }
+  });
+  fpDep = flatpickr('#'+prefix+'-dep', {
+    locale:'fr', dateFormat:'Y-m-d', altInput:true, altFormat:'j F Y',
+    minDate: tomorrowISO(), defaultDate: tomorrowISO(), disable: disabled,
+    onChange: function() { updateBookPrice(prefix, apt); }
+  });
+  window['_fp_'+prefix+'_arr'] = fpArr;
+  window['_fp_'+prefix+'_dep'] = fpDep;
+  updateBookPrice(prefix, apt);
 }
 
 function selPay(el, prefix) {
@@ -2771,10 +2994,16 @@ async function checkDispo(aptId, arrivee, depart) {
 
 async function submitResa(prefix, aptId) {
   var nom   = (document.getElementById(prefix+'-nom')||{}).value||'';
-  var tel   = (document.getElementById(prefix+'-tel')||{}).value||'';
+  // Combiner indicatif pays + numéro
+  var code  = (document.getElementById(prefix+'-tel-code')||{}).value||'+229';
+  var num   = (document.getElementById(prefix+'-tel')||{}).value||'';
+  var tel   = num ? code + ' ' + num.trim() : '';
   var email = (document.getElementById(prefix+'-email')||{}).value||'';
-  var arr   = (document.getElementById(prefix+'-arr')||{}).value||'';
-  var dep   = (document.getElementById(prefix+'-dep')||{}).value||'';
+  // Lire les dates depuis flatpickr (valeur ISO Y-m-d)
+  var fpA   = window['_fp_'+prefix+'_arr'];
+  var fpD   = window['_fp_'+prefix+'_dep'];
+  var arr   = fpA && fpA.selectedDates[0] ? fpA.formatDate(fpA.selectedDates[0],'Y-m-d') : (document.getElementById(prefix+'-arr')||{}).value||'';
+  var dep   = fpD && fpD.selectedDates[0] ? fpD.formatDate(fpD.selectedDates[0],'Y-m-d') : (document.getElementById(prefix+'-dep')||{}).value||'';
   var methode = (function(){
     var sel = document.querySelector('#'+prefix+'-submit');
     var parent = sel && sel.parentNode;
@@ -2868,6 +3097,7 @@ function resetMainForm() {
   document.getElementById('main-book-success').classList.remove('show');
   document.getElementById('main-book-form').style.display='block';
   document.getElementById('main-book-form').innerHTML=buildBookForm('main',apt);
+  setTimeout(function(){ initFlatpickrForApt('main', apt.id, apt); }, 50);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -2893,6 +3123,7 @@ async function loadResaPage() {
   document.getElementById('resa-apt-info').textContent=apt.ville+' · '+fmt(apt.prix_nuit)+' FCFA / nuit';
   document.getElementById('main-book-form').innerHTML=buildBookForm('main',apt);
   document.getElementById('main-book-success').classList.remove('show');
+  setTimeout(function(){ initFlatpickrForApt('main', apt.id, apt); }, 50);
 }
 
 async function selectResaApt(aptId) {
@@ -2908,6 +3139,7 @@ async function selectResaApt(aptId) {
   document.getElementById('resa-apt-info').textContent=apt.ville+' · '+fmt(apt.prix_nuit)+' FCFA / nuit';
   document.getElementById('main-book-form').innerHTML=buildBookForm('main',apt);
   document.getElementById('main-book-success').classList.remove('show');
+  setTimeout(function(){ initFlatpickrForApt('main', apt.id, apt); }, 50);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -3207,6 +3439,21 @@ function showAdminDashboard(user) {
   document.getElementById('admin-login-view').style.display    = 'none';
   document.getElementById('admin-dashboard-view').style.display = 'block';
   document.getElementById('admin-email-display').textContent   = user.email;
+
+  // Détecter le Super Admin
+  window._superAdmin = (user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
+  var dashboard = document.getElementById('admin-dashboard-view');
+  if (window._superAdmin) {
+    dashboard.classList.add('is-super-admin');
+    // Afficher badge Super Admin
+    var badge = document.getElementById('admin-role-badge');
+    if (badge) { badge.textContent = '⭐ Super Admin'; badge.className = 'admin-role-badge role-super'; }
+  } else {
+    dashboard.classList.remove('is-super-admin');
+    var badge = document.getElementById('admin-role-badge');
+    if (badge) { badge.textContent = 'Admin'; badge.className = 'admin-role-badge role-admin'; }
+  }
+
   adminNav(document.querySelector('[data-section="overview"]'), 'overview');
   loadUnreadCount();
 }
@@ -4058,9 +4305,9 @@ async function loadAdminResas() {
           + '<td style="font-size:11px">' + (r.methode_paiement || '—') + '</td>'
           + '<td>' + statutBadge(r.statut) + '</td>'
           + '<td><select onchange="updateResaStatut(\'' + r.id + '\',this.value)" class="admin-select" style="font-size:11px;padding:4px 6px">'
-          + ['en_attente', 'confirme', 'annule', 'termine'].map(function(s) {
+          + ['confirme', 'annule', 'termine'].map(function(s) {
             return '<option value="' + s + '"' + (r.statut === s ? ' selected' : '') + '>'
-              + { en_attente: 'En attente', confirme: 'Confirmé', annule: 'Annulé', termine: 'Terminé' }[s]
+              + { confirme: '✅ Confirmé', annule: '❌ Annulé', termine: '🏁 Terminé' }[s]
               + '</option>';
           }).join('') + '</select></td>'
           + '</tr>';
@@ -4507,35 +4754,111 @@ async function deleteFaq(id) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// UTILISATEURS
+// UTILISATEURS — Super Admin
 // ═══════════════════════════════════════════════════════════
 async function loadUtilisateurs() {
+  // Afficher/masquer selon le rôle
+  var nonSuper = document.getElementById('users-non-super');
+  var superDiv = document.querySelector('.super-admin-only');
+  if (!window._superAdmin) {
+    if (nonSuper) nonSuper.style.display = 'block';
+    if (superDiv) superDiv.style.display = 'none';
+    return;
+  }
+  if (nonSuper) nonSuper.style.display = 'none';
+  if (superDiv) superDiv.style.display = 'block';
+
   var el = document.getElementById('users-list');
   if (!el) return;
-  el.innerHTML = '<div class="admin-empty">Liste des administrateurs disponible via Supabase Auth.<br>Utilisez "Inviter un admin" pour ajouter un utilisateur.</div>';
+  el.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:13px;padding:8px">Chargement…</div>';
+
+  // Lire la table profils_admins (créer si besoin via SQL Editor)
+  var { data, error } = await sb.from('profils_admins').select('*').order('created_at');
+
+  if (error && error.code === '42P01') {
+    el.innerHTML = '<div style="color:#ff9800;font-size:13px;padding:8px">'
+      + '⚠️ Table <code>profils_admins</code> manquante.<br>'
+      + 'Exécutez ce SQL dans Supabase SQL Editor :<br><br>'
+      + '<code style="font-size:11px;line-height:1.8">'
+      + 'CREATE TABLE profils_admins (<br>'
+      + '&nbsp;&nbsp;id UUID PRIMARY KEY DEFAULT gen_random_uuid(),<br>'
+      + '&nbsp;&nbsp;email TEXT UNIQUE NOT NULL,<br>'
+      + '&nbsp;&nbsp;nom TEXT,<br>'
+      + '&nbsp;&nbsp;role TEXT DEFAULT \'admin\' CHECK (role IN (\'admin\',\'super_admin\')),<br>'
+      + '&nbsp;&nbsp;actif BOOLEAN DEFAULT true,<br>'
+      + '&nbsp;&nbsp;created_at TIMESTAMPTZ DEFAULT NOW()<br>'
+      + ');'
+      + '</code></div>';
+    return;
+  }
+
+  if (!data || !data.length) {
+    el.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:13px;padding:8px">Aucun administrateur enregistré. Ajoutez-en un avec le bouton ci-dessus.</div>';
+    return;
+  }
+
+  el.innerHTML = data.map(function(u) {
+    var isSelf = (u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
+    return '<div class="admin-user-row">'
+      + '<div>'
+      + '<div class="admin-user-email">'+u.email+'</div>'
+      + '<div class="admin-user-meta">'+(u.nom||'—')+' · Ajouté le '+fmtDate((u.created_at||'').slice(0,10))+'</div>'
+      + '</div>'
+      + '<div><span class="admin-role-badge '+(u.role==='super_admin'?'role-super':'role-admin')+'">'+(u.role==='super_admin'?'⭐ Super Admin':'Admin')+'</span></div>'
+      + '<div style="display:flex;gap:6px">'
+      + (u.actif
+        ? '<button class="admin-sm-btn" onclick="toggleAdminUser(\''+u.id+'\',false)" style="font-size:10px"'+(isSelf?' disabled title="Impossible de se désactiver soi-même"':'')+'>Désactiver</button>'
+        : '<button class="admin-sm-btn" onclick="toggleAdminUser(\''+u.id+'\',true)" style="font-size:10px;color:#4caf50">Réactiver</button>')
+      + (isSelf ? '' : '<button class="admin-sm-btn" onclick="deleteAdminUser(\''+u.id+'\',\''+u.email+'\')" style="font-size:10px;color:#ff4444">Supprimer</button>')
+      + '</div>'
+      + '</div>';
+  }).join('');
 }
 
 function showAddUserModal() {
-  var body = [
-    '<div class="admin-form-group"><label class="admin-label">Email *</label>',
-    '<input class="admin-input" id="user-email" type="email" placeholder="admin@aaz-consulting.bj" style="margin-bottom:0"></div>',
-    '<div style="margin-top:10px;padding:12px;background:rgba(255,255,255,.04);border-radius:4px;font-size:12px;color:rgba(255,255,255,.4)">',
-    'Un email d\'invitation sera envoyé à cette adresse. L\'utilisateur devra créer son mot de passe.',
-    '</div>'
-  ].join('\n');
-  showAdminModal('Inviter un administrateur', body, 'Envoyer l\'invitation', 'inviteUser()');
+  if (!window._superAdmin) { showToast('Accès réservé au Super Admin', 'error'); return; }
+  var body = '<div class="admin-form-group"><label class="admin-label">Email *</label>'
+    + '<input class="admin-input" id="user-email" type="email" placeholder="admin@example.com"></div>'
+    + '<div class="admin-form-group"><label class="admin-label">Nom</label>'
+    + '<input class="admin-input" id="user-nom" placeholder="Prénom Nom"></div>'
+    + '<div class="admin-form-group"><label class="admin-label">Rôle</label>'
+    + '<select class="admin-select" id="user-role">'
+    + '<option value="admin">Admin</option>'
+    + '<option value="super_admin">Super Admin</option>'
+    + '</select></div>'
+    + '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,.04);border-radius:4px;font-size:12px;color:rgba(255,255,255,.4);line-height:1.6">'
+    + '⚠️ L\'administrateur sera ajouté dans la table <code>profils_admins</code>. '
+    + 'Créez également son compte dans <strong>Supabase Auth → Authentication → Users</strong> pour qu\'il puisse se connecter.'
+    + '</div>';
+  showAdminModal('Ajouter un administrateur', body, 'Ajouter', 'inviteUser()');
 }
 
 async function inviteUser() {
-  var email = ((document.getElementById('user-email') || {}).value || '').trim();
+  if (!window._superAdmin) { showToast('Accès refusé', 'error'); return; }
+  var email = ((document.getElementById('user-email')||{}).value||'').trim();
+  var nom   = ((document.getElementById('user-nom')||{}).value||'').trim();
+  var role  = ((document.getElementById('user-role')||{}).value||'admin');
   if (!email) { showToast('Email requis', 'error'); return; }
-  var r = await sb.auth.admin.inviteUserByEmail(email);
-  if (r.error) {
-    showToast('Invitation envoyée (vérifiez votre plan Supabase)', 'info');
-  } else {
-    showToast('Invitation envoyée à ' + email, 'success');
-  }
+  var { error } = await sb.from('profils_admins').insert([{ email: email, nom: nom, role: role, actif: true }]);
+  if (error) { showToast('Erreur : ' + (error.message||'inconnue'), 'error'); return; }
+  showToast('Administrateur ajouté : ' + email, 'success');
   closeAdminModal();
+  loadUtilisateurs();
+}
+
+async function toggleAdminUser(id, actif) {
+  if (!window._superAdmin) return;
+  await sb.from('profils_admins').update({ actif: actif }).eq('id', id);
+  showToast(actif ? 'Compte réactivé' : 'Compte désactivé', 'success');
+  loadUtilisateurs();
+}
+
+async function deleteAdminUser(id, email) {
+  if (!window._superAdmin) return;
+  if (!confirm('Supprimer définitivement l\'administrateur ' + email + ' ?\n\nCela ne supprime pas son compte Supabase Auth.')) return;
+  await sb.from('profils_admins').delete().eq('id', id);
+  showToast('Administrateur supprimé', 'success');
+  loadUtilisateurs();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -4551,6 +4874,18 @@ async function loadParametres() {
   if (error || !data) return;
   var map = {};
   data.forEach(function(row) { map[row.cle] = row.valeur; });
+
+  // Charger les méthodes de paiement depuis Supabase
+  if (map['methodes_paiement']) {
+    try {
+      var saved = JSON.parse(map['methodes_paiement']);
+      METHODES_PAIEMENT = METHODES_PAIEMENT.map(function(m) {
+        var s = saved.find(function(x){ return x.id === m.id; });
+        return s ? Object.assign({}, m, { actif: s.actif }) : m;
+      });
+    } catch(e) {}
+  }
+  renderPaymentMethodsConfig();
 
   // Pré-remplir les champs admin
   var fields = {
@@ -4627,6 +4962,46 @@ function applyParametresSite(map) {
 }
 
 // Sauvegarde les paramètres dans Supabase (upsert clé-valeur)
+// ── Méthodes de paiement ─────────────────────────────────
+function renderPaymentMethodsConfig() {
+  var el = document.getElementById('pay-methods-config');
+  if (!el) return;
+  el.innerHTML = METHODES_PAIEMENT.map(function(m) {
+    var disabled = m.id === 'feexpay' ? ' title="Disponible après intégration Feexpay"' : '';
+    return '<div class="pay-method-toggle">'
+      + '<div class="pay-method-label">'
+      + '<span>'+m.icon+'</span>'
+      + '<span>'+m.label+'</span>'
+      + (m.id==='feexpay' ? '<span style="font-size:10px;color:#888;margin-left:4px">(à venir)</span>' : '')
+      + '</div>'
+      + '<label class="toggle-switch"'+disabled+'>'
+      + '<input type="checkbox" id="pay-toggle-'+m.id+'"'+(m.actif?' checked':'')+(m.id==='feexpay'?' disabled':'')+' onchange="syncPaymentToggle()">'
+      + '<div class="toggle-track"></div>'
+      + '<div class="toggle-thumb"></div>'
+      + '</label>'
+      + '</div>';
+  }).join('');
+}
+
+function syncPaymentToggle() {
+  METHODES_PAIEMENT = METHODES_PAIEMENT.map(function(m) {
+    var cb = document.getElementById('pay-toggle-'+m.id);
+    return Object.assign({}, m, { actif: cb ? cb.checked : m.actif });
+  });
+}
+
+async function savePaymentMethods() {
+  syncPaymentToggle();
+  var actives = METHODES_PAIEMENT.filter(function(m){ return m.actif; });
+  if (!actives.length) { showToast('Activez au moins un moyen de paiement', 'error'); return; }
+  var val = JSON.stringify(METHODES_PAIEMENT.map(function(m){ return { id: m.id, actif: m.actif }; }));
+  var { error } = await sb.from('parametres').upsert([{ cle: 'methodes_paiement', valeur: val }], { onConflict: 'cle' });
+  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+  var fb = document.getElementById('pay-methods-feedback');
+  if (fb) { fb.style.display='block'; fb.textContent='✅ Moyens de paiement sauvegardés ('+actives.length+' actif'+(actives.length>1?'s':'')+')'; }
+  showToast('Moyens de paiement mis à jour', 'success');
+}
+
 async function saveParametres() {
   var fields = {
     'site_nom':       (document.getElementById('param-nom')         || {}).value || '',
