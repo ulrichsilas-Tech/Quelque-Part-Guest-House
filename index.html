@@ -2445,18 +2445,14 @@ function showToast(msg, type) {
 
 // ─────────────────────────────────────────────────────────
 // PASSAGE AUTOMATIQUE STATUT → "termine"
-// Appelé au chargement de l'admin et lors de la recherche
-// d'annulation. Met à jour en base toutes les réservations
-// confirmées dont la date de départ est dépassée.
 // ─────────────────────────────────────────────────────────
 async function autoTerminerResasEcoulees() {
   if (IS_SRCDOC) return;
   try {
-    var today = todayISO();
     await sb.from('reservations')
       .update({ statut: 'termine' })
       .eq('statut', 'confirme')
-      .lt('date_depart', today);
+      .lt('date_depart', todayISO());
   } catch(e) {
     console.warn('[autoTerminer] Erreur :', e.message);
   }
@@ -2518,7 +2514,7 @@ async function fetchApts(forceRefresh) {
   }
   if (cachedApts && !forceRefresh) return cachedApts;
   var result = await sb.from('appartements')
-    .select('id, nom, slug, ville, pays, adresse, description, prix_nuit, frais_service, chambres, salles_bain, capacite, actif, ordre, equipements(id,nom), images(id,url,principale), videos(id,url,nom,format,ordre)')
+    .select('id, nom, slug, ville, pays, adresse, description, prix_nuit, chambres, salles_bain, capacite, actif, ordre, equipements(id,nom), images(id,url,principale), videos(id,url,nom,format,ordre)')
     .eq('actif', true)
     .order('ordre', { ascending: true });
   if (result.error) {
@@ -2999,10 +2995,8 @@ function toggleDial(e, prefix) {
     if(sel) setTimeout(function(){sel.scrollIntoView({block:'nearest'});},60);
   }
 }
-
 function dialSelect(optEl, prefix) {
-  var code=optEl.getAttribute('data-code');
-  var flag=optEl.getAttribute('data-flag');
+  var code=optEl.getAttribute('data-code'), flag=optEl.getAttribute('data-flag');
   var h=document.getElementById(prefix+'-tel-code');
   var f=document.getElementById(prefix+'-dial-flag');
   var c=document.getElementById(prefix+'-dial-code');
@@ -3011,10 +3005,10 @@ function dialSelect(optEl, prefix) {
   if(list) list.querySelectorAll('.phone-dial-option').forEach(function(o){o.classList.toggle('selected',o===optEl);});
   var drop=document.getElementById(prefix+'-dial-drop');
   var btn=document.getElementById(prefix+'-dial-btn');
-  if(drop){drop.classList.remove('open');} if(btn){btn.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+  if(drop) drop.classList.remove('open');
+  if(btn){btn.classList.remove('open');btn.setAttribute('aria-expanded','false');}
   var tel=document.getElementById(prefix+'-tel'); if(tel) tel.focus();
 }
-
 function filterDial(input, prefix) {
   var q=(input.value||'').toLowerCase().trim();
   var list=document.getElementById(prefix+'-dial-list');
@@ -3025,7 +3019,6 @@ function filterDial(input, prefix) {
     o.style.display=(!q||n.indexOf(q)>=0||c.indexOf(q)>=0)?'':'none';
   });
 }
-
 document.addEventListener('click',function(){
   document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){d.classList.remove('open');});
   document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){b.classList.remove('open');b.setAttribute('aria-expanded','false');});
@@ -3208,7 +3201,7 @@ async function submitResa(prefix, aptId) {
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Traitement…';}
 
   var montant = n * Number(apt.prix_nuit);
-  var ref = genRef();
+  var ref=genRef();
 
   var { data, error } = await sb.from('reservations').insert([{
     reference:        ref,
@@ -3382,6 +3375,7 @@ function cancelGoBack() {
   cancelHideError('cancel-err-2');
 }
 
+// Étape 1 → recherche de la réservation (directement via Supabase)
 async function rechercherResa() {
   cancelHideError('cancel-err-1');
   var ref = ((document.getElementById('cancel-ref-input')||{}).value||'').trim().toUpperCase();
@@ -3401,31 +3395,56 @@ async function rechercherResa() {
       cancelShowError('cancel-err-1','R\u00e9servation introuvable. V\u00e9rifiez la r\u00e9f\u00e9rence ou cette r\u00e9servation a d\u00e9j\u00e0 \u00e9t\u00e9 annul\u00e9e.');
       return;
     }
-    var r = result.data;
-    var apt = r.appartements || {};
+    var r = result.data; var apt = r.appartements || {};
     _cancelResaData = {
       id: r.id, reference: r.reference, statut: r.statut,
       statut_paiement: r.statut_paiement, client_nom: r.client_nom,
       client_tel: r.client_tel, client_email: r.client_email,
       date_arrivee: r.date_arrivee, date_depart: r.date_depart,
       montant_total: r.montant_total, methode_paiement: r.methode_paiement,
-      apt_nom: apt.nom||'\u2014',
-      apt_adresse: apt.adresse||(apt.ville||'Cotonou, B\u00e9nin')
+      apt_nom: apt.nom||'\u2014', apt_adresse: apt.adresse||(apt.ville||'Cotonou, B\u00e9nin')
     };
     renderResaPreview(_cancelResaData);
     cancelShowStep(2);
   } catch(e) {
-    cancelShowError('cancel-err-1','Erreur de connexion : '+(e.message||'R\u00e9essayez dans un instant.'));
+    cancelShowError('cancel-err-1','Erreur : '+(e.message||'R\u00e9essayez dans un instant.'));
   } finally {
     if(btn) { btn.disabled=false; btn.textContent='Rechercher ma r\u00e9servation \u2192'; }
   }
 }
 
-// Affiche l'aperçu de la réservation à l'étape 2
+// Étape 2 → confirmation d'annulation (mise à jour directe Supabase)
+async function confirmerAnnulation() {
+  if(!_cancelResaData) { cancelGoBack(); return; }
+  cancelHideError('cancel-err-2');
+  var btn = document.getElementById('cancel-confirm-btn');
+  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Annulation\u2026'; }
+  try {
+    var result = await sb.from('reservations')
+      .update({ statut: 'annule' })
+      .eq('reference', _cancelResaData.reference)
+      .eq('id', _cancelResaData.id);
+    if(result.error) throw new Error(result.error.message);
+    var msgEl = document.getElementById('cancel-success-msg');
+    if(msgEl) {
+      msgEl.innerHTML = 'Votre r\u00e9servation <strong>'+_cancelResaData.reference+'</strong>'
+        +' a bien \u00e9t\u00e9 annul\u00e9e.<br><br>'
+        +'Le g\u00e9rant a \u00e9t\u00e9 notifi\u00e9. Un e-mail de confirmation vous sera envoy\u00e9.<br><br>'
+        +'<span style="color:#e07b00;font-size:13px">\u26a0\ufe0f Conform\u00e9ment aux conditions, '
+        +'l\'acompte de <strong>5\u202f000\u00a0FCFA</strong> est non remboursable.</span>';
+    }
+    cancelShowStep(3);
+    showToast('R\u00e9servation '+_cancelResaData.reference+' annul\u00e9e.','success');
+    _cancelResaData = null;
+  } catch(e) {
+    cancelShowError('cancel-err-2','Erreur : '+(e.message||'R\u00e9essayez dans un instant.'));
+  } finally {
+    if(btn) { btn.disabled=false; btn.textContent='Confirmer l\'annulation'; }
+  }
+}
 function renderResaPreview(r) {
   var el = document.getElementById('cancel-resa-preview');
   if(!el) return;
-  // Traduction du statut de réservation (r.statut) — pas du statut paiement
   var statutLabel = {
     'confirme':   '✅ Réservation confirmée',
     'en_attente': '⏳ En attente de confirmation',
@@ -3453,38 +3472,6 @@ function renderResaPreview(r) {
   var warn = document.getElementById('cancel-warning-refund');
   if(warn) warn.style.display = 'block';
 }
-
-// Étape 2 → confirmation d'annulation (mise à jour directe Supabase)
-async function confirmerAnnulation() {
-  if(!_cancelResaData) { cancelGoBack(); return; }
-  cancelHideError('cancel-err-2');
-  var btn = document.getElementById('cancel-confirm-btn');
-  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Annulation\u2026'; }
-  try {
-    var result = await sb.from('reservations')
-      .update({ statut: 'annule' })
-      .eq('reference', _cancelResaData.reference)
-      .eq('id', _cancelResaData.id);
-    if(result.error) throw new Error(result.error.message);
-    var msgEl = document.getElementById('cancel-success-msg');
-    if(msgEl) {
-      msgEl.innerHTML = 'Votre r\u00e9servation <strong>'+_cancelResaData.reference+'</strong>'
-        +' a bien \u00e9t\u00e9 annul\u00e9e.<br><br>'
-        +'Le g\u00e9rant a \u00e9t\u00e9 notifi\u00e9. Un e-mail de confirmation vous sera envoy\u00e9.<br><br>'
-        +'<span style="color:#e07b00;font-size:13px">\u26a0\ufe0f Conform\u00e9ment aux conditions de r\u00e9servation, '
-        +'l\'acompte de <strong>5\u202f000\u00a0FCFA</strong> vers\u00e9 lors de la r\u00e9servation '
-        +'est non remboursable.</span>';
-    }
-    cancelShowStep(3);
-    showToast('R\u00e9servation '+_cancelResaData.reference+' annul\u00e9e avec succ\u00e8s.','success');
-    _cancelResaData = null;
-  } catch(e) {
-    cancelShowError('cancel-err-2','Erreur : '+(e.message||'R\u00e9essayez dans un instant.'));
-  } finally {
-    if(btn) { btn.disabled=false; btn.textContent='Confirmer l\'annulation'; }
-  }
-}
-
 
 // ═══════════════════════════════════════════════════════════
 // ADMIN NAVIGATION
@@ -3607,7 +3594,6 @@ function showAdminDashboard(user) {
   document.getElementById('admin-login-view').style.display    = 'none';
   document.getElementById('admin-dashboard-view').style.display = 'block';
   document.getElementById('admin-email-display').textContent   = user.email;
-  // Passage automatique des réservations écoulées à "Terminée"
   autoTerminerResasEcoulees();
 
   // Détecter le Super Admin
@@ -3916,11 +3902,9 @@ function openAptCrudModal(apt) {
     '<div class="modal-tab-pane active" id="ti">',
     '<div class="admin-form-group"><label class="admin-label">Nom *</label>',
     '<input class="admin-input" id="m-nom" value="' + (apt ? apt.nom : '') + '" placeholder="Ex: Studio Premium Haies Vives" style="margin-bottom:0"></div>',
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">',
+    '<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px">',
     '<div class="admin-form-group"><label class="admin-label">Prix / nuit (FCFA)</label>',
     '<input class="admin-input" id="m-prix" type="number" value="' + (apt ? apt.prix_nuit : 25000) + '" style="margin-bottom:0"></div>',
-    '<div class="admin-form-group"><label class="admin-label">Frais service (FCFA)</label>',
-    '<input class="admin-input" id="m-frais" type="number" value="' + (apt ? apt.frais_service : 2500) + '" style="margin-bottom:0"></div>',
     '</div>',
     '<div class="admin-form-group" style="margin-top:10px"><label class="admin-label">Ville</label>',
     '<input class="admin-input" id="m-ville" value="' + (apt ? apt.ville : 'Cotonou') + '" style="margin-bottom:0"></div>',
@@ -4117,7 +4101,6 @@ async function adminDelPhoto(btn) {
 async function saveAptModal() {
   var nom     = (document.getElementById('m-nom')     || {}).value || '';
   var prix    = parseInt((document.getElementById('m-prix')   || {}).value) || 25000;
-  var frais   = parseInt((document.getElementById('m-frais')  || {}).value) || 2500;
   var ville   = (document.getElementById('m-ville')   || {}).value || 'Cotonou';
   var adresse = (document.getElementById('m-adresse') || {}).value || '';
   var desc    = (document.getElementById('m-desc')    || {}).value || '';
@@ -4139,7 +4122,7 @@ async function saveAptModal() {
   var slug = _modalEditId ? baseSlug : (baseSlug + '-' + Date.now().toString(36));
 
   var data = {
-    slug: slug, nom: nom, prix_nuit: prix, frais_service: frais,
+    slug: slug, nom: nom, prix_nuit: prix,
     ville: ville, adresse: adresse, description: desc,
     chambres: ch, salles_bain: sdb, capacite: cap,
     actif: actif, pays: 'Bénin', ordre: 0
