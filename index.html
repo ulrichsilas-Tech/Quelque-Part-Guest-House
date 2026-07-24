@@ -131,6 +131,7 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
   background-image:url('https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=80')}
 .hero-slide:nth-child(4){animation-delay:15s;
   background-image:url('https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=700&q=80')}
+/* Les backgrounds ci-dessus sont des fallbacks — remplacés dynamiquement par initHeroImages() */
 @keyframes heroSlide{
   0%,4%   {opacity:0}
   8%,22%  {opacity:1}
@@ -960,44 +961,24 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 .cancel-error-box{background:#fff5f5;border:1px solid #f5c6cb;border-radius:var(--radius);
   padding:12px 14px;font-size:13px;color:#721c24;margin-top:12px;display:none;line-height:1.6}
 /* ═══════════════════════════════════════════
-   CHAMP TÉLÉPHONE — DROPDOWN PREMIUM
+   CHAMP TÉLÉPHONE AVEC INDICATIF
 ═══════════════════════════════════════════ */
-.phone-field{display:flex;gap:0;position:relative;align-items:stretch}
-.phone-number-input{border-radius:0 var(--radius) var(--radius) 0!important;flex:1}
-.phone-dial-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--white);border:1px solid rgba(27,46,122,.18);border-right:none;
-  border-radius:var(--radius) 0 0 var(--radius);
-  padding:0 10px 0 8px;cursor:pointer;white-space:nowrap;min-width:86px;
-  transition:border-color .2s;user-select:none;outline:none;font-family:'Inter',sans-serif;
+.phone-field{display:flex;gap:0}
+.phone-flag-select{
+  background:var(--white);border:1px solid var(--border);
+  border-right:none;border-radius:var(--radius) 0 0 var(--radius);
+  padding:0 8px;font-size:13px;color:var(--ink);
+  cursor:pointer;min-width:90px;outline:none;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+  padding-right:22px;
 }
-.phone-dial-btn:focus,.phone-dial-btn.open{border-color:var(--blue);z-index:2}
-.phone-dial-btn .dial-flag{font-size:18px;line-height:1;flex-shrink:0}
-.phone-dial-btn .dial-code{font-size:12.5px;font-weight:500;color:var(--ink)}
-.phone-dial-btn .dial-caret{font-size:8px;color:#9CA3AF;margin-left:1px;transition:transform .18s;flex-shrink:0}
-.phone-dial-btn.open .dial-caret{transform:rotate(180deg)}
-.phone-dial-dropdown{
-  position:absolute;top:calc(100% + 6px);left:0;z-index:600;
-  background:var(--white);border:1px solid rgba(27,46,122,.15);
-  border-radius:6px;box-shadow:0 12px 36px rgba(27,46,122,.16);
-  min-width:256px;max-height:260px;overflow:hidden;
-  display:none;flex-direction:column;
+.phone-flag-select:focus{border-color:var(--blue);z-index:1}
+.phone-number-input{
+  border-radius:0 var(--radius) var(--radius) 0!important;
+  flex:1;
 }
-.phone-dial-dropdown.open{display:flex}
-.phone-dial-search{padding:8px 10px;border-bottom:1px solid rgba(27,46,122,.08);background:var(--white);flex-shrink:0}
-.phone-dial-search input{
-  width:100%;border:1px solid rgba(27,46,122,.18);border-radius:4px;
-  padding:6px 10px 6px 30px;font-size:12.5px;color:var(--ink);outline:none;
-  font-family:'Inter',sans-serif;
-  background:var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") 8px center no-repeat;
-}
-.phone-dial-search input:focus{border-color:var(--blue)}
-.phone-dial-list{overflow-y:auto;flex:1}
-.phone-dial-option{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;transition:background .12s}
-.phone-dial-option:hover,.phone-dial-option.selected{background:#EEF2FF}
-.phone-dial-option .opt-flag{font-size:20px;flex-shrink:0;width:26px;text-align:center;line-height:1}
-.phone-dial-option .opt-name{flex:1;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.phone-dial-option .opt-code{font-size:12.5px;color:var(--muted);font-weight:500;flex-shrink:0}
 
 /* ═══════════════════════════════════════════
    FLATPICKR — THÈME PERSONNALISÉ
@@ -1524,12 +1505,12 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
           <div class="cancel-title">Saisir votre référence</div>
           <div class="cancel-sub">
             Votre référence de réservation vous a été communiquée par e-mail
-            au moment de votre réservation (format : <strong>QP-2026-XXXX</strong>).
+            au moment de votre réservation (format : <strong>QPGH-XXXX-XXXX</strong>).
           </div>
           <div class="form-group" style="margin-bottom:14px">
             <label class="form-label">Référence de réservation *</label>
             <input class="form-input" id="cancel-ref-input" type="text"
-              placeholder="Ex : QP-2026-1234"
+              placeholder="Ex : QPGH-2026-0001"
               style="text-transform:uppercase;letter-spacing:.05em;font-weight:500"
               oninput="this.value=this.value.toUpperCase()"
               onkeydown="if(event.key==='Enter') rechercherResa()">
@@ -1716,6 +1697,9 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
           <div class="admin-sidebar-label">Contenu du site</div>
           <a class="admin-sidebar-link" data-section="contenu" onclick="adminNav(this,'contenu')">
             <span>✏️</span> Textes &amp; Bannières
+          </a>
+          <a class="admin-sidebar-link" data-section="hero-images" onclick="adminNav(this,'hero-images')">
+            <span>🖼️</span> Images du Hero
           </a>
           <a class="admin-sidebar-link" data-section="faq" onclick="adminNav(this,'faq')">
             <span>❓</span> FAQ
@@ -2048,6 +2032,43 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
           </div>
         </div>
 
+        <!-- ── HERO IMAGES ── -->
+        <div class="admin-section" id="sec-hero-images">
+          <div class="admin-page-title">Images du Hero — Carrousel d'accueil</div>
+          <div class="admin-card" style="padding:14px;margin-bottom:14px">
+            <div style="font-size:13px;color:rgba(255,255,255,.55);line-height:1.7">
+              Ces images sont affichées en rotation dans le carrousel de la page d'accueil.
+              Ajoutez vos vraies photos d'appartements pour remplacer les images par défaut.<br>
+              <span style="color:#d4af37">📐 Taille recommandée : 1400 × 900 px — Format : JPG, PNG ou WebP.</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+            <button class="admin-primary-btn" onclick="showUploadHeroImageModal()">+ Téléverser une image</button>
+            <button class="admin-sm-btn" onclick="loadHeroImages()">🔄 Actualiser</button>
+          </div>
+          <div id="hero-images-list">
+            <div style="color:rgba(255,255,255,.4);font-size:13px;padding:8px">Chargement…</div>
+          </div>
+          <div class="admin-card" style="padding:14px;margin-top:16px;border:1px solid rgba(245,166,35,.2)">
+            <div class="admin-card-title" style="margin-bottom:8px;color:#d4af37">⚠️ Configuration Supabase requise</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.9">
+              Exécutez ce SQL dans Supabase SQL Editor (une seule fois) :<br>
+              <code style="font-size:11px;display:block;margin-top:6px;padding:10px;background:rgba(0,0,0,.3);border-radius:4px;line-height:1.8;white-space:pre-wrap">CREATE TABLE IF NOT EXISTS hero_images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  url TEXT NOT NULL,
+  nom TEXT,
+  ordre INT DEFAULT 0,
+  actif BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE hero_images ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read" ON hero_images FOR SELECT USING (true);
+CREATE POLICY "Admin write" ON hero_images FOR ALL USING (auth.role() = 'authenticated');</code>
+              Puis dans <strong>Storage → New Bucket</strong> : créer un bucket public nommé <code>hero-images</code>.
+            </div>
+          </div>
+        </div>
+
         <!-- ── FAQ ── -->
         <div class="admin-section" id="sec-faq">
           <div class="admin-page-title">FAQ</div>
@@ -2211,17 +2232,36 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 // ─────────────────────────────────────────────────────────
 var SUPABASE_URL     = 'https://utyimnjxgfeevdhrmgyc.supabase.co';
 var SUPABASE_ANON_KEY = 'sb_publishable_zgAfWEsBGlbu2yffNMAShg_EoDCmmnp';
+var SITE_URL          = 'https://quelquepart.vercel.app'; // ← Mettre à jour avec l'URL réelle de production
 
 // Numéro WhatsApp (format international sans +)
 var WHATSAPP_NUMBER = '22900000000';
 
 // ── Emails transactionnels — Backend Resend via Supabase Edge Functions ───────
 var EDGE_FUNCTION_URL = 'https://utyimnjxgfeevdhrmgyc.supabase.co/functions/v1/send-email';
-var ADMIN_EMAILS_JS   = 'gerant1@mail.com,gerant2@mail.com';
+// ADMIN_EMAILS_JS : plus hardcodé — chargé dynamiquement depuis profils_admins
+var ADMIN_EMAILS_JS   = ''; // Sera rempli par loadAdminEmailsFromDB()
 
 // ── Super Admin — email du compte avec droits étendus ────────────────────────
-// Renseigner l'email du compte Super Admin (doit correspondre au compte Supabase Auth)
+// Seule valeur encore en dur : l'email du Super Admin (propriétaire de la plateforme)
+// Tous les autres gérants sont gérés dynamiquement depuis le dashboard admin.
 var SUPER_ADMIN_EMAIL = 'superadmin@votredomaine.com';
+
+// Chargement dynamique des emails gérants depuis la table profils_admins
+async function loadAdminEmailsFromDB() {
+  if (IS_SRCDOC) return;
+  try {
+    var { data } = await sb.from('profils_admins')
+      .select('email')
+      .eq('actif', true)
+      .neq('role', 'super_admin'); // Le super admin est déjà notifié séparément si besoin
+    if (data && data.length) {
+      ADMIN_EMAILS_JS = data.map(function(u) { return u.email; }).join(',');
+    }
+  } catch(e) {
+    console.warn('[AdminEmails] Impossible de charger depuis DB :', e.message);
+  }
+}
 
 // ── Méthodes de paiement actives (modifiable depuis Admin → Paramètres) ───────
 // Ces valeurs sont écrasées au chargement si des paramètres Supabase existent
@@ -2411,6 +2451,7 @@ function goTo(page) {
   if(page==='home') {
     if(window._adminJustSaved) { cachedApts=null; window._adminJustSaved=false; }
     loadHomeApts();
+    initHeroImages();
   }
   if(page==='appartements') {
     // Show the apartment list
@@ -2441,21 +2482,6 @@ function showToast(msg, type) {
   t.textContent = msg;
   t.className = 'toast toast-'+(type||'info')+' show';
   setTimeout(function(){ t.classList.remove('show'); }, 4000);
-}
-
-// ─────────────────────────────────────────────────────────
-// PASSAGE AUTOMATIQUE STATUT → "termine"
-// ─────────────────────────────────────────────────────────
-async function autoTerminerResasEcoulees() {
-  if (IS_SRCDOC) return;
-  try {
-    await sb.from('reservations')
-      .update({ statut: 'termine' })
-      .eq('statut', 'confirme')
-      .lt('date_depart', todayISO());
-  } catch(e) {
-    console.warn('[autoTerminer] Erreur :', e.message);
-  }
 }
 
 // ─────────────────────────────────────────────────────────
@@ -2514,7 +2540,7 @@ async function fetchApts(forceRefresh) {
   }
   if (cachedApts && !forceRefresh) return cachedApts;
   var result = await sb.from('appartements')
-    .select('id, nom, slug, ville, pays, adresse, description, prix_nuit, chambres, salles_bain, capacite, actif, ordre, equipements(id,nom), images(id,url,principale), videos(id,url,nom,format,ordre)')
+    .select('id, nom, slug, ville, pays, adresse, description, prix_nuit, frais_service, chambres, salles_bain, capacite, actif, ordre, equipements(id,nom), images(id,url,principale), videos(id,url,nom,format,ordre)')
     .eq('actif', true)
     .order('ordre', { ascending: true });
   if (result.error) {
@@ -2881,148 +2907,28 @@ function closeAptDetail() {
 // ─────────────────────────────────────────────────────────
 // FORMULAIRE RÉSERVATION (réutilisable)
 // ─────────────────────────────────────────────────────────
+// Indicatifs pays disponibles
 var PHONE_CODES = [
-  { code:'+229', flag:'🇧🇯', name:'Bénin' },
-  { code:'+213', flag:'🇩🇿', name:'Algérie' },
-  { code:'+244', flag:'🇦🇴', name:'Angola' },
-  { code:'+32',  flag:'🇧🇪', name:'Belgique' },
-  { code:'+226', flag:'🇧🇫', name:'Burkina Faso' },
-  { code:'+257', flag:'🇧🇮', name:'Burundi' },
-  { code:'+238', flag:'🇨🇻', name:'Cap-Vert' },
-  { code:'+236', flag:'🇨🇫', name:'Centrafrique' },
-  { code:'+269', flag:'🇰🇲', name:'Comores' },
-  { code:'+242', flag:'🇨🇬', name:'Congo' },
-  { code:'+243', flag:'🇨🇩', name:'Congo (RDC)' },
-  { code:'+225', flag:'🇨🇮', name:"Côte d'Ivoire" },
-  { code:'+253', flag:'🇩🇯', name:'Djibouti' },
-  { code:'+20',  flag:'🇪🇬', name:'Égypte' },
-  { code:'+240', flag:'🇬🇶', name:'Guinée Équat.' },
-  { code:'+291', flag:'🇪🇷', name:'Érythrée' },
-  { code:'+251', flag:'🇪🇹', name:'Éthiopie' },
-  { code:'+241', flag:'🇬🇦', name:'Gabon' },
-  { code:'+220', flag:'🇬🇲', name:'Gambie' },
-  { code:'+233', flag:'🇬🇭', name:'Ghana' },
-  { code:'+224', flag:'🇬🇳', name:'Guinée' },
-  { code:'+245', flag:'🇬🇼', name:'Guinée-Bissau' },
-  { code:'+254', flag:'🇰🇪', name:'Kenya' },
-  { code:'+266', flag:'🇱🇸', name:'Lesotho' },
-  { code:'+231', flag:'🇱🇷', name:'Libéria' },
-  { code:'+218', flag:'🇱🇾', name:'Libye' },
-  { code:'+261', flag:'🇲🇬', name:'Madagascar' },
-  { code:'+265', flag:'🇲🇼', name:'Malawi' },
-  { code:'+223', flag:'🇲🇱', name:'Mali' },
-  { code:'+222', flag:'🇲🇷', name:'Mauritanie' },
-  { code:'+230', flag:'🇲🇺', name:'Maurice' },
-  { code:'+212', flag:'🇲🇦', name:'Maroc' },
-  { code:'+258', flag:'🇲🇿', name:'Mozambique' },
-  { code:'+264', flag:'🇳🇦', name:'Namibie' },
-  { code:'+227', flag:'🇳🇪', name:'Niger' },
-  { code:'+234', flag:'🇳🇬', name:'Nigéria' },
-  { code:'+250', flag:'🇷🇼', name:'Rwanda' },
-  { code:'+239', flag:'🇸🇹', name:'São Tomé' },
-  { code:'+221', flag:'🇸🇳', name:'Sénégal' },
-  { code:'+248', flag:'🇸🇨', name:'Seychelles' },
-  { code:'+232', flag:'🇸🇱', name:'Sierra Leone' },
-  { code:'+252', flag:'🇸🇴', name:'Somalie' },
-  { code:'+27',  flag:'🇿🇦', name:'Afrique du Sud' },
-  { code:'+249', flag:'🇸🇩', name:'Soudan' },
-  { code:'+211', flag:'🇸🇸', name:'Soudan du Sud' },
-  { code:'+268', flag:'🇸🇿', name:'Eswatini' },
-  { code:'+255', flag:'🇹🇿', name:'Tanzanie' },
-  { code:'+228', flag:'🇹🇬', name:'Togo' },
-  { code:'+216', flag:'🇹🇳', name:'Tunisie' },
-  { code:'+256', flag:'🇺🇬', name:'Ouganda' },
-  { code:'+260', flag:'🇿🇲', name:'Zambie' },
-  { code:'+263', flag:'🇿🇼', name:'Zimbabwe' },
-  { code:'+237', flag:'🇨🇲', name:'Cameroun' },
-  { code:'+33',  flag:'🇫🇷', name:'France' },
-  { code:'+41',  flag:'🇨🇭', name:'Suisse' },
-  { code:'+1',   flag:'🇺🇸', name:'USA / Canada' },
-  { code:'+44',  flag:'🇬🇧', name:'Royaume-Uni' },
-  { code:'+49',  flag:'🇩🇪', name:'Allemagne' },
-  { code:'+34',  flag:'🇪🇸', name:'Espagne' },
-  { code:'+39',  flag:'🇮🇹', name:'Italie' },
-  { code:'+351', flag:'🇵🇹', name:'Portugal' },
-  { code:'+55',  flag:'🇧🇷', name:'Brésil' },
-  { code:'+86',  flag:'🇨🇳', name:'Chine' },
-  { code:'+91',  flag:'🇮🇳', name:'Inde' },
-  { code:'+971', flag:'🇦🇪', name:'Émirats Arabes' },
-  { code:'+966', flag:'🇸🇦', name:'Arabie Saoudite' },
+  { code: '+229', flag: '🇧🇯', name: 'Bénin' },
+  { code: '+225', flag: '🇨🇮', name: "Côte d'Ivoire" },
+  { code: '+221', flag: '🇸🇳', name: 'Sénégal' },
+  { code: '+223', flag: '🇲🇱', name: 'Mali' },
+  { code: '+226', flag: '🇧🇫', name: 'Burkina Faso' },
+  { code: '+228', flag: '🇹🇬', name: 'Togo' },
+  { code: '+237', flag: '🇨🇲', name: 'Cameroun' },
+  { code: '+243', flag: '🇨🇩', name: 'RD Congo' },
+  { code: '+33',  flag: '🇫🇷', name: 'France' },
+  { code: '+1',   flag: '🇺🇸', name: 'USA/Canada' },
+  { code: '+32',  flag: '🇧🇪', name: 'Belgique' },
+  { code: '+41',  flag: '🇨🇭', name: 'Suisse' },
 ];
 
 function buildPhoneCodeSelect(prefix) {
-  var def = PHONE_CODES[0];
-  var items = PHONE_CODES.map(function(c) {
-    return '<div class="phone-dial-option'+(c.code===def.code?' selected':'')+'" '
-      +'data-code="'+c.code+'" data-flag="'+c.flag+'" data-name="'+c.name+'" '
-      +'tabindex="0" role="option" '
-      +'onclick="dialSelect(this,\''+prefix+'\')" '
-      +'onkeydown="if(event.key===\'Enter\'||event.key===\' \')dialSelect(this,\''+prefix+'\')">'
-      +'<span class="opt-flag">'+c.flag+'</span>'
-      +'<span class="opt-name">'+c.name+'</span>'
-      +'<span class="opt-code">'+c.code+'</span>'
-      +'</div>';
+  var opts = PHONE_CODES.map(function(c) {
+    return '<option value="'+c.code+'"'+(c.code==='+229'?' selected':'')+'>'+c.flag+' '+c.code+' — '+c.name+'</option>';
   }).join('');
-  return '<input type="hidden" id="'+prefix+'-tel-code" value="'+def.code+'">'
-    +'<button type="button" class="phone-dial-btn" id="'+prefix+'-dial-btn" '
-    +'onclick="toggleDial(event,\''+prefix+'\')" aria-haspopup="listbox" aria-expanded="false">'
-    +'<span class="dial-flag" id="'+prefix+'-dial-flag">'+def.flag+'</span>'
-    +'<span class="dial-code" id="'+prefix+'-dial-code">'+def.code+'</span>'
-    +'<span class="dial-caret">\u25bc</span>'
-    +'</button>'
-    +'<div class="phone-dial-dropdown" id="'+prefix+'-dial-drop" role="listbox">'
-    +'<div class="phone-dial-search">'
-    +'<input type="text" placeholder="Rechercher un pays\u2026" autocomplete="off" '
-    +'oninput="filterDial(this,\''+prefix+'\')">'
-    +'</div>'
-    +'<div class="phone-dial-list" id="'+prefix+'-dial-list">'+items+'</div>'
-    +'</div>';
+  return '<select class="phone-flag-select" id="'+prefix+'-tel-code">'+opts+'</select>';
 }
-
-function toggleDial(e, prefix) {
-  e.stopPropagation();
-  var btn=document.getElementById(prefix+'-dial-btn');
-  var drop=document.getElementById(prefix+'-dial-drop');
-  if(!btn||!drop) return;
-  var opening=!drop.classList.contains('open');
-  document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){d.classList.remove('open');});
-  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){b.classList.remove('open');b.setAttribute('aria-expanded','false');});
-  if(opening){
-    drop.classList.add('open'); btn.classList.add('open'); btn.setAttribute('aria-expanded','true');
-    var si=drop.querySelector('input');
-    if(si){si.value='';filterDial(si,prefix);setTimeout(function(){si.focus();},50);}
-    var sel=document.querySelector('#'+prefix+'-dial-list .phone-dial-option.selected');
-    if(sel) setTimeout(function(){sel.scrollIntoView({block:'nearest'});},60);
-  }
-}
-function dialSelect(optEl, prefix) {
-  var code=optEl.getAttribute('data-code'), flag=optEl.getAttribute('data-flag');
-  var h=document.getElementById(prefix+'-tel-code');
-  var f=document.getElementById(prefix+'-dial-flag');
-  var c=document.getElementById(prefix+'-dial-code');
-  if(h) h.value=code; if(f) f.textContent=flag; if(c) c.textContent=code;
-  var list=document.getElementById(prefix+'-dial-list');
-  if(list) list.querySelectorAll('.phone-dial-option').forEach(function(o){o.classList.toggle('selected',o===optEl);});
-  var drop=document.getElementById(prefix+'-dial-drop');
-  var btn=document.getElementById(prefix+'-dial-btn');
-  if(drop) drop.classList.remove('open');
-  if(btn){btn.classList.remove('open');btn.setAttribute('aria-expanded','false');}
-  var tel=document.getElementById(prefix+'-tel'); if(tel) tel.focus();
-}
-function filterDial(input, prefix) {
-  var q=(input.value||'').toLowerCase().trim();
-  var list=document.getElementById(prefix+'-dial-list');
-  if(!list) return;
-  list.querySelectorAll('.phone-dial-option').forEach(function(o){
-    var n=(o.getAttribute('data-name')||'').toLowerCase();
-    var c=(o.getAttribute('data-code')||'').toLowerCase();
-    o.style.display=(!q||n.indexOf(q)>=0||c.indexOf(q)>=0)?'':'none';
-  });
-}
-document.addEventListener('click',function(){
-  document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){d.classList.remove('open');});
-  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){b.classList.remove('open');b.setAttribute('aria-expanded','false');});
-});
 
 function buildPaymentMethods(prefix) {
   var actives = METHODES_PAIEMENT.filter(function(m){ return m.actif; });
@@ -3053,11 +2959,9 @@ function buildBookForm(prefix, apt) {
     +'<div class="form-row">'
     +'<div class="form-group"><label class="form-label">Arrivée *</label>'
     +'<input class="form-input" id="'+prefix+'-arr" type="text" placeholder="Choisir une date" readonly>'
-    +'<div class="form-error" id="'+prefix+'-arr-err">Date d\'arrivée requise</div>'
     +'</div>'
     +'<div class="form-group"><label class="form-label">Départ *</label>'
     +'<input class="form-input" id="'+prefix+'-dep" type="text" placeholder="Choisir une date" readonly>'
-    +'<div class="form-error" id="'+prefix+'-dep-err">Date de départ requise</div>'
     +'</div>'
     +'</div>'
     +'<div class="flatpickr-legend"><div class="flatpickr-legend-item"><span class="leg-dot leg-dispo"></span>Disponible</div><div class="flatpickr-legend-item"><span class="leg-dot leg-indispo"></span>Réservé</div><div class="flatpickr-legend-item"><span class="leg-dot leg-sel"></span>Votre choix</div></div>'
@@ -3065,6 +2969,7 @@ function buildBookForm(prefix, apt) {
     +'<div class="price-summary" id="'+prefix+'-price">'
     +'<div class="price-row"><span>Tarif par nuit</span><span>'+fmt(apt.prix_nuit)+' FCFA</span></div>'
     +'<div class="price-row"><span>Nombre de nuits</span><span id="'+prefix+'-nights">—</span></div>'
+    +'<div class="price-row"><span>Frais de service</span><span>'+fmt(apt.frais_service||2500)+' FCFA</span></div>'
     +'<div class="price-total-row"><span>Total</span><span id="'+prefix+'-total">—</span></div>'
     +'</div>'
     +'<div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:12px 0 8px">Mode de paiement</div>'
@@ -3119,7 +3024,7 @@ function updateBookPrice(prefix, apt) {
   var n = calcNuits(arr, dep);
   if(n<=0){ priceEl.style.display='none'; return; }
   document.getElementById(prefix+'-nights').textContent = n+' nuit'+(n>1?'s':'');
-  document.getElementById(prefix+'-total').textContent = fmt(n*(apt.prix_nuit||25000))+' FCFA';
+  document.getElementById(prefix+'-total').textContent = fmt(n*(apt.prix_nuit||25000)+(apt.frais_service||2500))+' FCFA';
   priceEl.style.display='block';
   // Vérif dispo
   clearTimeout(dispoTimeout);
@@ -3167,21 +3072,12 @@ async function submitResa(prefix, aptId) {
     return opt ? opt.textContent.trim() : 'MTN MoMo';
   })();
   var errShown=false;
-  var nomErr=document.getElementById(prefix+'-nom-err');
-  if(nomErr) nomErr.classList.remove('show');
-  if(!nom.trim()&&nomErr){nomErr.classList.add('show');errShown=true;}
-  var telErr=document.getElementById(prefix+'-tel-err');
-  if(telErr) telErr.classList.remove('show');
-  if(!num.trim()&&telErr){telErr.classList.add('show');errShown=true;}
-  var emailErrEl=document.getElementById(prefix+'-email-err');
-  if(emailErrEl) emailErrEl.classList.remove('show');
-  if(!email.trim()&&emailErrEl){emailErrEl.classList.add('show');errShown=true;}
-  var arrErrEl=document.getElementById(prefix+'-arr-err');
-  var depErrEl=document.getElementById(prefix+'-dep-err');
-  if(arrErrEl) arrErrEl.classList.remove('show');
-  if(depErrEl) depErrEl.classList.remove('show');
-  if(!arr&&arrErrEl){arrErrEl.classList.add('show');errShown=true;}
-  if(!dep&&depErrEl){depErrEl.classList.add('show');errShown=true;}
+  ['nom','tel','email','arr','dep'].forEach(function(f){
+    var v=(document.getElementById(prefix+'-'+f)||{}).value||'';
+    var err=document.getElementById(prefix+'-'+f+'-err');
+    if(err) err.classList.remove('show');
+    if(!v&&err){err.classList.add('show');errShown=true;}
+  });
   if(errShown) return;
   if(!/^[^@]+@[^@]+\.[^@]+$/.test(email)){
     var ee=document.getElementById(prefix+'-email-err');
@@ -3200,7 +3096,7 @@ async function submitResa(prefix, aptId) {
   var btn=document.getElementById(prefix+'-submit');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Traitement…';}
 
-  var montant = n * Number(apt.prix_nuit);
+  var montant=(n*Number(apt.prix_nuit))+(Number(apt.frais_service)||2500);
   var ref=genRef();
 
   var { data, error } = await sb.from('reservations').insert([{
@@ -3212,6 +3108,7 @@ async function submitResa(prefix, aptId) {
     date_arrivee:     arr,
     date_depart:      dep,
     prix_nuit:        apt.prix_nuit,
+    frais_service:    apt.frais_service||2500,
     montant_total:    montant,
     methode_paiement: methode,
     statut:           'confirme',
@@ -3375,82 +3272,48 @@ function cancelGoBack() {
   cancelHideError('cancel-err-2');
 }
 
-// Étape 1 → recherche de la réservation (directement via Supabase)
+// Étape 1 → recherche de la réservation
 async function rechercherResa() {
   cancelHideError('cancel-err-1');
   var ref = ((document.getElementById('cancel-ref-input')||{}).value||'').trim().toUpperCase();
   if(!ref) { cancelShowError('cancel-err-1','Veuillez saisir votre référence de réservation.'); return; }
-  if(IS_SRCDOC) { showToast('Non disponible en prévisualisation.','info'); return; }
+
+  if(IS_SRCDOC) {
+    showToast('Non disponible en prévisualisation — déployez le site.','info');
+    return;
+  }
+
   var btn = document.getElementById('cancel-search-btn');
-  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Recherche\u2026'; }
+  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Recherche…'; }
+
   try {
-    await autoTerminerResasEcoulees();
-    var result = await sb.from('reservations')
-      .select('id,reference,statut,statut_paiement,client_nom,client_tel,client_email,date_arrivee,date_depart,montant_total,methode_paiement,appartements(nom,adresse,ville)')
-      .eq('reference', ref)
-      .neq('statut', 'annule')
-      .maybeSingle();
-    if(result.error) throw new Error(result.error.message);
-    if(!result.data) {
-      cancelShowError('cancel-err-1','R\u00e9servation introuvable. V\u00e9rifiez la r\u00e9f\u00e9rence ou cette r\u00e9servation a d\u00e9j\u00e0 \u00e9t\u00e9 annul\u00e9e.');
+    var res = await fetch(CANCEL_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference: ref, action: 'lookup' })
+    });
+    var data = await res.json();
+
+    if(!res.ok || !data.ok) {
+      cancelShowError('cancel-err-1', data.error || 'Réservation introuvable. Vérifiez la référence.');
       return;
     }
-    var r = result.data; var apt = r.appartements || {};
-    _cancelResaData = {
-      id: r.id, reference: r.reference, statut: r.statut,
-      statut_paiement: r.statut_paiement, client_nom: r.client_nom,
-      client_tel: r.client_tel, client_email: r.client_email,
-      date_arrivee: r.date_arrivee, date_depart: r.date_depart,
-      montant_total: r.montant_total, methode_paiement: r.methode_paiement,
-      apt_nom: apt.nom||'\u2014', apt_adresse: apt.adresse||(apt.ville||'Cotonou, B\u00e9nin')
-    };
-    renderResaPreview(_cancelResaData);
+
+    _cancelResaData = data.reservation;
+    renderResaPreview(data.reservation);
     cancelShowStep(2);
+
   } catch(e) {
-    cancelShowError('cancel-err-1','Erreur : '+(e.message||'R\u00e9essayez dans un instant.'));
+    cancelShowError('cancel-err-1', 'Erreur de connexion. Réessayez dans un instant.');
   } finally {
-    if(btn) { btn.disabled=false; btn.textContent='Rechercher ma r\u00e9servation \u2192'; }
+    if(btn) { btn.disabled=false; btn.textContent='Rechercher ma réservation →'; }
   }
 }
 
-// Étape 2 → confirmation d'annulation (mise à jour directe Supabase)
-async function confirmerAnnulation() {
-  if(!_cancelResaData) { cancelGoBack(); return; }
-  cancelHideError('cancel-err-2');
-  var btn = document.getElementById('cancel-confirm-btn');
-  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Annulation\u2026'; }
-  try {
-    var result = await sb.from('reservations')
-      .update({ statut: 'annule' })
-      .eq('reference', _cancelResaData.reference)
-      .eq('id', _cancelResaData.id);
-    if(result.error) throw new Error(result.error.message);
-    var msgEl = document.getElementById('cancel-success-msg');
-    if(msgEl) {
-      msgEl.innerHTML = 'Votre r\u00e9servation <strong>'+_cancelResaData.reference+'</strong>'
-        +' a bien \u00e9t\u00e9 annul\u00e9e.<br><br>'
-        +'Le g\u00e9rant a \u00e9t\u00e9 notifi\u00e9. Un e-mail de confirmation vous sera envoy\u00e9.<br><br>'
-        +'<span style="color:#e07b00;font-size:13px">\u26a0\ufe0f Conform\u00e9ment aux conditions, '
-        +'l\'acompte de <strong>5\u202f000\u00a0FCFA</strong> est non remboursable.</span>';
-    }
-    cancelShowStep(3);
-    showToast('R\u00e9servation '+_cancelResaData.reference+' annul\u00e9e.','success');
-    _cancelResaData = null;
-  } catch(e) {
-    cancelShowError('cancel-err-2','Erreur : '+(e.message||'R\u00e9essayez dans un instant.'));
-  } finally {
-    if(btn) { btn.disabled=false; btn.textContent='Confirmer l\'annulation'; }
-  }
-}
+// Affiche l'aperçu de la réservation à l'étape 2
 function renderResaPreview(r) {
   var el = document.getElementById('cancel-resa-preview');
   if(!el) return;
-  var statutLabel = {
-    'confirme':   '✅ Réservation confirmée',
-    'en_attente': '⏳ En attente de confirmation',
-    'termine':    '🏁 Séjour terminé',
-    'annule':     '❌ Annulée'
-  }[r.statut] || ('⏳ ' + (r.statut || 'En attente'));
   var rows = [
     ['Appartement',  r.apt_nom],
     ['Adresse',      r.apt_adresse||'Cotonou, Bénin'],
@@ -3459,7 +3322,7 @@ function renderResaPreview(r) {
     ['Client',       r.client_nom],
     ['Montant',      fmtMontant(r.montant_total)],
     ['Paiement',     r.methode_paiement],
-    ['Statut',       statutLabel],
+    ['Statut',       r.statut_paiement === 'payé' ? '💳 Payé' : '⏳ En attente'],
   ];
   el.innerHTML = '<div class="resa-preview-ref">📋 Réf : '+r.reference+'</div>'
     + rows.map(function(row){
@@ -3472,6 +3335,49 @@ function renderResaPreview(r) {
   var warn = document.getElementById('cancel-warning-refund');
   if(warn) warn.style.display = 'block';
 }
+
+// Étape 2 → confirmation d'annulation
+async function confirmerAnnulation() {
+  if(!_cancelResaData) { cancelGoBack(); return; }
+  cancelHideError('cancel-err-2');
+
+  var btn = document.getElementById('cancel-confirm-btn');
+  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Annulation…'; }
+
+  try {
+    var res = await fetch(CANCEL_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference: _cancelResaData.reference, action: 'confirm' })
+    });
+    var data = await res.json();
+
+    if(!res.ok || !data.ok) {
+      cancelShowError('cancel-err-2', data.error || 'Une erreur est survenue. Réessayez.');
+      return;
+    }
+
+    // Succès
+    var msgEl = document.getElementById('cancel-success-msg');
+    if(msgEl) {
+      msgEl.innerHTML = 'Votre réservation <strong>'+_cancelResaData.reference+'</strong>'
+        +' a bien été annulée.<br><br>'
+        +'Un e-mail et un message WhatsApp de confirmation vous ont été envoyés.<br><br>'
+        +'<span style="color:#e07b00;font-size:13px">⚠️ Conformément aux conditions de réservation, '
+        +'l\'acompte de <strong>5 000 FCFA</strong> versé lors de la réservation '
+        +'est non remboursable.</span>';
+    }
+    cancelShowStep(3);
+    showToast('Réservation '+_cancelResaData.reference+' annulée avec succès.','success');
+    _cancelResaData = null;
+
+  } catch(e) {
+    cancelShowError('cancel-err-2','Erreur de connexion. Réessayez dans un instant.');
+  } finally {
+    if(btn) { btn.disabled=false; btn.textContent='Confirmer l\'annulation'; }
+  }
+}
+
 
 // ═══════════════════════════════════════════════════════════
 // ADMIN NAVIGATION
@@ -3499,6 +3405,7 @@ function adminNav(linkEl, sectionId) {
     'avis':           loadAvis,
     'notifications':  loadNotifSettings,
     'contenu':        loadContenu,
+    'hero-images':    loadHeroImages,
     'faq':            loadFaq,
     'utilisateurs':   loadUtilisateurs,
     'parametres':     loadParametres,
@@ -3547,7 +3454,6 @@ function showForgotPassword() {
   var panel = document.getElementById('forgot-pw-panel');
   if (!panel) return;
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  // Pré-remplir avec l'email saisi
   var emailInput = document.getElementById('admin-email');
   var forgotInput = document.getElementById('forgot-pw-email');
   if (forgotInput && emailInput && emailInput.value) {
@@ -3561,26 +3467,21 @@ async function handleForgotPassword() {
   var fb      = document.getElementById('forgot-pw-feedback');
   var email   = (emailEl ? emailEl.value : '').trim();
   if (!email) { showToast('Entrez votre email administrateur', 'error'); return; }
-  if (IS_SRCDOC) {
-    showToast('Non disponible en prévisualisation', 'info');
-    return;
-  }
+  if (IS_SRCDOC) { showToast('Non disponible en prévisualisation', 'info'); return; }
   if (fb) { fb.style.display = 'block'; fb.style.color = '#888'; fb.textContent = 'Envoi en cours…'; }
   if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Envoi…'; }
-
-  // Appel à la Edge Function (email #7)
-  // Note : l'admin n'est pas encore connecté ici, donc on utilise un appel sans JWT.
-  // La Edge Function génère le lien via supabase.auth.admin.generateLink
-  // Alternative : utiliser Supabase Auth resetPasswordForEmail directement
   try {
-    var redirectTo = window.location.origin + window.location.pathname + '#admin';
+    // Construire l'URL de redirection vers la page admin du site en production
+    // On force l'origine réelle (pas localhost) en utilisant window.location
+    var origin = window.location.origin;
+    // Sécurité : si on est sur localhost en dev, forcer l'URL de prod depuis SITE_URL si défini
+    if (origin.indexOf('localhost') !== -1 || origin.indexOf('127.0.0.1') !== -1) {
+      origin = (typeof SITE_URL !== 'undefined' && SITE_URL) ? SITE_URL.replace(/\/$/, '') : origin;
+    }
+    var redirectTo = origin + window.location.pathname + '#reset-password';
     var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectTo });
     if (res.error) throw new Error(res.error.message);
-    // Tenter aussi d'envoyer notre email brandé via Edge Function (optionnel si non connecté)
-    if (fb) {
-      fb.style.color = '#4caf50';
-      fb.textContent = '✅ Email envoyé à ' + email + '. Vérifiez votre boîte mail.';
-    }
+    if (fb) { fb.style.color = '#4caf50'; fb.textContent = '✅ Lien envoyé à ' + email + '. Vérifiez votre boîte mail.'; }
     showToast('Lien de réinitialisation envoyé à ' + email, 'success');
   } catch(e) {
     if (fb) { fb.style.color = '#ff4444'; fb.textContent = '✗ ' + (e.message || 'Erreur inconnue'); }
@@ -3590,11 +3491,65 @@ async function handleForgotPassword() {
   }
 }
 
+// Intercepter le token de réinitialisation dans l'URL au chargement de la page
+// Supabase insère #access_token=...&type=recovery dans l'URL du lien de l'e-mail
+(function handlePasswordRecoveryFromURL() {
+  var hash = window.location.hash || '';
+  if (hash.indexOf('type=recovery') === -1 && hash.indexOf('reset-password') === -1) return;
+  // Parser les paramètres du hash
+  var params = {};
+  hash.replace(/^#/, '').split('&').forEach(function(p) {
+    var kv = p.split('='); params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+  });
+  if (!params.access_token) return;
+  // Échanger le token pour une session Supabase
+  sb.auth.setSession({ access_token: params.access_token, refresh_token: params.refresh_token || '' })
+    .then(function() { showResetPasswordDialog(); })
+    .catch(function(e) { console.warn('Recovery token error:', e); });
+})();
+
+function showResetPasswordDialog() {
+  // Créer une modale de changement de mot de passe
+  var overlay = document.createElement('div');
+  overlay.id = 'reset-pw-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = '<div style="background:#1a1f3a;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:32px;width:360px;max-width:90vw">'
+    + '<h3 style="color:#fff;font-size:16px;margin-bottom:20px;font-family:\'Playfair Display\',serif">🔐 Nouveau mot de passe</h3>'
+    + '<div class="admin-form-group"><label class="admin-label">Nouveau mot de passe *</label>'
+    + '<input class="admin-input" id="reset-pw-new" type="password" placeholder="Minimum 8 caractères" autocomplete="new-password"></div>'
+    + '<div class="admin-form-group" style="margin-top:12px"><label class="admin-label">Confirmer *</label>'
+    + '<input class="admin-input" id="reset-pw-confirm" type="password" placeholder="Répéter le mot de passe" autocomplete="new-password"></div>'
+    + '<div id="reset-pw-msg" style="font-size:12px;margin-top:8px;min-height:18px"></div>'
+    + '<button class="admin-btn" style="margin-top:16px;width:100%" onclick="doResetPassword()">Enregistrer le nouveau mot de passe</button>'
+    + '</div>';
+  document.body.appendChild(overlay);
+  // Nettoyer le hash de l'URL pour éviter une ré-exécution au rechargement
+  history.replaceState(null, '', window.location.pathname + '#admin');
+}
+
+async function doResetPassword() {
+  var pw1 = ((document.getElementById('reset-pw-new')||{}).value || '').trim();
+  var pw2 = ((document.getElementById('reset-pw-confirm')||{}).value || '').trim();
+  var msg = document.getElementById('reset-pw-msg');
+  if (!pw1 || pw1.length < 8) { if(msg){msg.style.color='#ff4444';msg.textContent='Le mot de passe doit contenir au moins 8 caractères.';} return; }
+  if (pw1 !== pw2) { if(msg){msg.style.color='#ff4444';msg.textContent='Les deux mots de passe ne correspondent pas.';} return; }
+  if(msg){msg.style.color='#888';msg.textContent='Enregistrement…';}
+  var res = await sb.auth.updateUser({ password: pw1 });
+  if (res.error) {
+    if(msg){msg.style.color='#ff4444';msg.textContent='Erreur : '+(res.error.message||'inconnue');}
+    return;
+  }
+  var overlay = document.getElementById('reset-pw-overlay');
+  if(overlay) overlay.remove();
+  showToast('✅ Mot de passe mis à jour avec succès. Reconnectez-vous.', 'success');
+  await sb.auth.signOut();
+  goTo('admin');
+}
+
 function showAdminDashboard(user) {
   document.getElementById('admin-login-view').style.display    = 'none';
   document.getElementById('admin-dashboard-view').style.display = 'block';
   document.getElementById('admin-email-display').textContent   = user.email;
-  autoTerminerResasEcoulees();
 
   // Détecter le Super Admin
   window._superAdmin = (user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
@@ -3902,9 +3857,11 @@ function openAptCrudModal(apt) {
     '<div class="modal-tab-pane active" id="ti">',
     '<div class="admin-form-group"><label class="admin-label">Nom *</label>',
     '<input class="admin-input" id="m-nom" value="' + (apt ? apt.nom : '') + '" placeholder="Ex: Studio Premium Haies Vives" style="margin-bottom:0"></div>',
-    '<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px">',
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">',
     '<div class="admin-form-group"><label class="admin-label">Prix / nuit (FCFA)</label>',
     '<input class="admin-input" id="m-prix" type="number" value="' + (apt ? apt.prix_nuit : 25000) + '" style="margin-bottom:0"></div>',
+    '<div class="admin-form-group"><label class="admin-label">Frais service (FCFA)</label>',
+    '<input class="admin-input" id="m-frais" type="number" value="' + (apt ? apt.frais_service : 2500) + '" style="margin-bottom:0"></div>',
     '</div>',
     '<div class="admin-form-group" style="margin-top:10px"><label class="admin-label">Ville</label>',
     '<input class="admin-input" id="m-ville" value="' + (apt ? apt.ville : 'Cotonou') + '" style="margin-bottom:0"></div>',
@@ -4101,6 +4058,7 @@ async function adminDelPhoto(btn) {
 async function saveAptModal() {
   var nom     = (document.getElementById('m-nom')     || {}).value || '';
   var prix    = parseInt((document.getElementById('m-prix')   || {}).value) || 25000;
+  var frais   = parseInt((document.getElementById('m-frais')  || {}).value) || 2500;
   var ville   = (document.getElementById('m-ville')   || {}).value || 'Cotonou';
   var adresse = (document.getElementById('m-adresse') || {}).value || '';
   var desc    = (document.getElementById('m-desc')    || {}).value || '';
@@ -4122,7 +4080,7 @@ async function saveAptModal() {
   var slug = _modalEditId ? baseSlug : (baseSlug + '-' + Date.now().toString(36));
 
   var data = {
-    slug: slug, nom: nom, prix_nuit: prix,
+    slug: slug, nom: nom, prix_nuit: prix, frais_service: frais,
     ville: ville, adresse: adresse, description: desc,
     chambres: ch, salles_bain: sdb, capacite: cap,
     actif: actif, pays: 'Bénin', ordre: 0
@@ -4952,17 +4910,26 @@ async function loadUtilisateurs() {
 
   el.innerHTML = data.map(function(u) {
     var isSelf = (u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
+    var notifBadge = u.notif_email === false
+      ? '<span style="font-size:10px;color:#ff9800;margin-left:6px">🔕 Notifs OFF</span>'
+      : '<span style="font-size:10px;color:#4caf50;margin-left:6px">🔔 Notifs ON</span>';
     return '<div class="admin-user-row">'
-      + '<div>'
+      + '<div style="flex:1;min-width:0">'
       + '<div class="admin-user-email">'+u.email+'</div>'
-      + '<div class="admin-user-meta">'+(u.nom||'—')+' · Ajouté le '+fmtDate((u.created_at||'').slice(0,10))+'</div>'
+      + '<div class="admin-user-meta">'
+      + (u.nom||'—')
+      + (u.telephone ? ' · 📞 '+u.telephone : '')
+      + ' · Ajouté le '+fmtDate((u.created_at||'').slice(0,10))
+      + notifBadge
       + '</div>'
-      + '<div><span class="admin-role-badge '+(u.role==='super_admin'?'role-super':'role-admin')+'">'+(u.role==='super_admin'?'⭐ Super Admin':'Admin')+'</span></div>'
-      + '<div style="display:flex;gap:6px">'
+      + '</div>'
+      + '<div><span class="admin-role-badge '+(u.role==='super_admin'?'role-super':'role-admin')+'">'+(u.role==='super_admin'?'⭐ Super Admin':'👤 Gérant')+'</span></div>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      + (isSelf ? '' : '<button class="admin-sm-btn" onclick="editAdminUser(\''+u.id+'\')" style="font-size:10px">✏️ Modifier</button>')
       + (u.actif
-        ? '<button class="admin-sm-btn" onclick="toggleAdminUser(\''+u.id+'\',false)" style="font-size:10px"'+(isSelf?' disabled title="Impossible de se désactiver soi-même"':'')+'>Désactiver</button>'
-        : '<button class="admin-sm-btn" onclick="toggleAdminUser(\''+u.id+'\',true)" style="font-size:10px;color:#4caf50">Réactiver</button>')
-      + (isSelf ? '' : '<button class="admin-sm-btn" onclick="deleteAdminUser(\''+u.id+'\',\''+u.email+'\')" style="font-size:10px;color:#ff4444">Supprimer</button>')
+          ? '<button class="admin-sm-btn" onclick="toggleAdminUser(\''+u.id+'\',false)" style="font-size:10px"'+(isSelf?' disabled title="Impossible"':'')+'>Désactiver</button>'
+          : '<button class="admin-sm-btn" onclick="toggleAdminUser(\''+u.id+'\',true)" style="font-size:10px;color:#4caf50">Réactiver</button>')
+      + (isSelf ? '' : '<button class="admin-sm-btn" onclick="deleteAdminUser(\''+u.id+'\',\''+u.nom+'\')" style="font-size:10px;color:#ff4444">✕ Supprimer</button>')
       + '</div>'
       + '</div>';
   }).join('');
@@ -4971,47 +4938,118 @@ async function loadUtilisateurs() {
 function showAddUserModal() {
   if (!window._superAdmin) { showToast('Accès réservé au Super Admin', 'error'); return; }
   var body = '<div class="admin-form-group"><label class="admin-label">Email *</label>'
-    + '<input class="admin-input" id="user-email" type="email" placeholder="admin@example.com"></div>'
-    + '<div class="admin-form-group"><label class="admin-label">Nom</label>'
-    + '<input class="admin-input" id="user-nom" placeholder="Prénom Nom"></div>'
+    + '<input class="admin-input" id="user-email" type="email" placeholder="gerant@example.com"></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px">'
+    + '<div class="admin-form-group"><label class="admin-label">Prénom Nom *</label>'
+    + '<input class="admin-input" id="user-nom" placeholder="Ex : Jean Dupont"></div>'
+    + '<div class="admin-form-group"><label class="admin-label">Téléphone</label>'
+    + '<input class="admin-input" id="user-tel" placeholder="+229 XX XX XX XX"></div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
     + '<div class="admin-form-group"><label class="admin-label">Rôle</label>'
     + '<select class="admin-select" id="user-role">'
-    + '<option value="admin">Admin</option>'
+    + '<option value="admin">Gérant</option>'
     + '<option value="super_admin">Super Admin</option>'
     + '</select></div>'
-    + '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,.04);border-radius:4px;font-size:12px;color:rgba(255,255,255,.4);line-height:1.6">'
-    + '⚠️ L\'administrateur sera ajouté dans la table <code>profils_admins</code>. '
-    + 'Créez également son compte dans <strong>Supabase Auth → Authentication → Users</strong> pour qu\'il puisse se connecter.'
+    + '<div class="admin-form-group"><label class="admin-label">Notifications email</label>'
+    + '<select class="admin-select" id="user-notif">'
+    + '<option value="1">Activées</option>'
+    + '<option value="0">Désactivées</option>'
+    + '</select></div>'
+    + '</div>'
+    + '<div style="margin-top:10px;padding:10px;background:rgba(255,166,35,.06);border:1px solid rgba(255,166,35,.15);border-radius:4px;font-size:12px;color:rgba(255,255,255,.5);line-height:1.7">'
+    + '⚠️ Après l\'ajout, créez le mot de passe du gérant dans <strong style="color:#d4af37">Supabase Auth → Authentication → Users → Invite user</strong> '
+    + 'avec le même email. Le gérant recevra un lien d\'invitation par email pour définir son mot de passe.'
     + '</div>';
-  showAdminModal('Ajouter un administrateur', body, 'Ajouter', 'inviteUser()');
+  showAdminModal('Ajouter un gérant', body, 'Ajouter', 'inviteUser()');
 }
 
 async function inviteUser() {
   if (!window._superAdmin) { showToast('Accès refusé', 'error'); return; }
   var email = ((document.getElementById('user-email')||{}).value||'').trim();
   var nom   = ((document.getElementById('user-nom')||{}).value||'').trim();
+  var tel   = ((document.getElementById('user-tel')||{}).value||'').trim();
   var role  = ((document.getElementById('user-role')||{}).value||'admin');
+  var notif = ((document.getElementById('user-notif')||{}).value||'1') === '1';
   if (!email) { showToast('Email requis', 'error'); return; }
-  var { error } = await sb.from('profils_admins').insert([{ email: email, nom: nom, role: role, actif: true }]);
+  if (!nom)   { showToast('Nom requis', 'error'); return; }
+  var { error } = await sb.from('profils_admins').insert([{
+    email: email, nom: nom, telephone: tel, role: role,
+    notif_email: notif, actif: true
+  }]);
   if (error) { showToast('Erreur : ' + (error.message||'inconnue'), 'error'); return; }
-  showToast('Administrateur ajouté : ' + email, 'success');
+  showToast('Gérant ajouté : ' + nom + ' (' + email + ')', 'success');
   closeAdminModal();
   loadUtilisateurs();
+  loadAdminEmailsFromDB(); // Rafraîchir la liste des emails gérants
 }
 
 async function toggleAdminUser(id, actif) {
   if (!window._superAdmin) return;
   await sb.from('profils_admins').update({ actif: actif }).eq('id', id);
-  showToast(actif ? 'Compte réactivé' : 'Compte désactivé', 'success');
+  showToast(actif ? 'Gérant réactivé' : 'Gérant désactivé', 'success');
   loadUtilisateurs();
+  loadAdminEmailsFromDB();
 }
 
-async function deleteAdminUser(id, email) {
+async function deleteAdminUser(id, nom) {
   if (!window._superAdmin) return;
-  if (!confirm('Supprimer définitivement l\'administrateur ' + email + ' ?\n\nCela ne supprime pas son compte Supabase Auth.')) return;
+  if (!confirm('Supprimer définitivement le gérant « ' + nom + ' » ?\n\nSon compte Supabase Auth reste intact — supprimez-le manuellement dans Supabase si besoin.')) return;
   await sb.from('profils_admins').delete().eq('id', id);
-  showToast('Administrateur supprimé', 'success');
+  showToast('Gérant supprimé', 'success');
   loadUtilisateurs();
+  loadAdminEmailsFromDB();
+}
+
+async function editAdminUser(id) {
+  if (!window._superAdmin) { showToast('Accès refusé', 'error'); return; }
+  var { data: u, error } = await sb.from('profils_admins').select('*').eq('id', id).single();
+  if (error || !u) { showToast('Impossible de charger ce gérant', 'error'); return; }
+  var body = '<div class="admin-form-group"><label class="admin-label">Email</label>'
+    + '<input class="admin-input" id="edit-user-email" type="email" value="'+u.email+'" placeholder="email@example.com"></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px">'
+    + '<div class="admin-form-group"><label class="admin-label">Prénom Nom</label>'
+    + '<input class="admin-input" id="edit-user-nom" value="'+(u.nom||'')+'" placeholder="Jean Dupont"></div>'
+    + '<div class="admin-form-group"><label class="admin-label">Téléphone</label>'
+    + '<input class="admin-input" id="edit-user-tel" value="'+(u.telephone||'')+'" placeholder="+229 XX XX XX XX"></div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    + '<div class="admin-form-group"><label class="admin-label">Rôle</label>'
+    + '<select class="admin-select" id="edit-user-role">'
+    + '<option value="admin"'+(u.role==='admin'?' selected':'')+'>Gérant</option>'
+    + '<option value="super_admin"'+(u.role==='super_admin'?' selected':'')+'>Super Admin</option>'
+    + '</select></div>'
+    + '<div class="admin-form-group"><label class="admin-label">Notifications email</label>'
+    + '<select class="admin-select" id="edit-user-notif">'
+    + '<option value="1"'+(u.notif_email!==false?' selected':'')+'>Activées</option>'
+    + '<option value="0"'+(u.notif_email===false?' selected':'')+'>Désactivées</option>'
+    + '</select></div>'
+    + '</div>'
+    + '<input type="hidden" id="edit-user-id" value="'+id+'">'
+    + '<div style="margin-top:10px;padding:8px;background:rgba(255,255,255,.04);border-radius:4px;font-size:11px;color:rgba(255,255,255,.35)">'
+    + '⚠️ Modifier l\'email ici ne change pas l\'email dans Supabase Auth (connexion). '
+    + 'Pour changer le compte de connexion, faites-le aussi dans Supabase Auth.'
+    + '</div>';
+  showAdminModal('Modifier le gérant', body, 'Enregistrer', 'saveEditAdminUser()');
+}
+
+async function saveEditAdminUser() {
+  if (!window._superAdmin) { showToast('Accès refusé', 'error'); return; }
+  var id    = ((document.getElementById('edit-user-id')||{}).value||'').trim();
+  var email = ((document.getElementById('edit-user-email')||{}).value||'').trim();
+  var nom   = ((document.getElementById('edit-user-nom')||{}).value||'').trim();
+  var tel   = ((document.getElementById('edit-user-tel')||{}).value||'').trim();
+  var role  = ((document.getElementById('edit-user-role')||{}).value||'admin');
+  var notif = ((document.getElementById('edit-user-notif')||{}).value||'1') === '1';
+  if (!id || !email) { showToast('Données manquantes', 'error'); return; }
+  var { error } = await sb.from('profils_admins')
+    .update({ email: email, nom: nom, telephone: tel, role: role, notif_email: notif })
+    .eq('id', id);
+  if (error) { showToast('Erreur : ' + (error.message||'inconnue'), 'error'); return; }
+  showToast('Gérant mis à jour : ' + (nom||email), 'success');
+  closeAdminModal();
+  loadUtilisateurs();
+  loadAdminEmailsFromDB();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -5620,7 +5658,195 @@ function safeSetPage(page) {
   }
 }
 
-(function initRoute() {
+// ═══════════════════════════════════════════════════════════
+// HERO IMAGES — Dynamique depuis Supabase Storage
+// Bucket : "hero-images" (public)
+// Table  : hero_images (id, url, nom, ordre, actif, created_at)
+// ═══════════════════════════════════════════════════════════
+var HERO_BUCKET = 'hero-images';
+
+async function initHeroImages() {
+  if (IS_SRCDOC) return; // garder les fallbacks Unsplash en preview
+  try {
+    var { data, error } = await sb.from('hero_images')
+      .select('id, url, nom, ordre')
+      .eq('actif', true)
+      .order('ordre', { ascending: true })
+      .limit(6);
+    if (error || !data || !data.length) return; // garder les fallbacks
+    var slides = document.querySelectorAll('.hero-slide');
+    var dots   = document.querySelectorAll('.hsd');
+    var n = Math.min(data.length, 6);
+    // Recréer les slides dynamiquement
+    var container = document.querySelector('.hero-slides');
+    if (!container) return;
+    // Supprimer les anciens slides (pas l'overlay et caption)
+    var oldSlides = container.querySelectorAll('.hero-slide');
+    oldSlides.forEach(function(s) { s.remove(); });
+    // Recréer
+    var interval = Math.max(5, Math.floor(20 / n)); // secondes par slide
+    var totalDuration = interval * n;
+    data.slice(0, n).forEach(function(img, i) {
+      var s = document.createElement('div');
+      s.className = 'hero-slide';
+      s.style.backgroundImage = 'url(' + img.url + ')';
+      s.style.animationDuration = (totalDuration) + 's';
+      s.style.animationDelay = (i * interval) + 's';
+      container.insertBefore(s, container.firstChild);
+    });
+    // Mettre à jour les dots
+    var dotsWrap = document.querySelector('.hero-slide-dots');
+    if (dotsWrap) {
+      dotsWrap.innerHTML = '';
+      for (var i = 0; i < n; i++) {
+        var d = document.createElement('div'); d.className = 'hsd';
+        dotsWrap.appendChild(d);
+      }
+    }
+    // Mettre à jour keyframes dynamiquement
+    var perc = Math.floor(100 / n);
+    var style = document.getElementById('hero-keyframes-dynamic') || document.createElement('style');
+    style.id = 'hero-keyframes-dynamic';
+    var fadeIn = Math.min(4, perc * 0.15);
+    var hold   = perc * 0.7;
+    style.textContent = '@keyframes heroSlide{'
+      + '0%,' + fadeIn + '% {opacity:0}'
+      + '8%,' + hold + '% {opacity:1}'
+      + (perc - fadeIn) + '%,100%{opacity:0}'
+      + '}';
+    document.head.appendChild(style);
+  } catch(e) {
+    console.warn('[Hero] Impossible de charger les images :', e.message);
+  }
+}
+
+// ─── Admin : gestion des images Hero ───────────────────────
+async function loadHeroImages() {
+  var el = document.getElementById('hero-images-list');
+  if (!el) return;
+  el.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:13px;padding:8px">Chargement…</div>';
+  try {
+    var { data, error } = await sb.from('hero_images')
+      .select('*').order('ordre', { ascending: true });
+    if (error) throw new Error(error.message);
+    if (!data || !data.length) {
+      el.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:13px;padding:16px 8px">'
+        + 'Aucune image. Cliquez sur « Ajouter une image » pour téléverser la première photo.</div>';
+      return;
+    }
+    el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:4px">'
+      + data.map(function(img) {
+          return '<div style="background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">'
+            + '<div style="height:130px;background-image:url('+img.url+');background-size:cover;background-position:center;position:relative">'
+            + '<div style="position:absolute;top:6px;right:6px;display:flex;gap:4px">'
+            + '<button onclick="moveHeroImage(\''+img.id+'\','+(img.ordre-1)+')" title="Monter" style="background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:3px;padding:3px 7px;font-size:12px;cursor:pointer">↑</button>'
+            + '<button onclick="moveHeroImage(\''+img.id+'\','+(img.ordre+1)+')" title="Descendre" style="background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:3px;padding:3px 7px;font-size:12px;cursor:pointer">↓</button>'
+            + '</div>'
+            + '<div style="position:absolute;bottom:0;left:0;right:0;padding:4px 8px;background:rgba(0,0,0,.5)">'
+            + '<span style="color:#fff;font-size:11px">#'+(img.ordre+1)+'</span>'
+            + (img.actif
+                ? '<span style="color:#4caf50;font-size:10px;margin-left:6px">● Actif</span>'
+                : '<span style="color:#ff9800;font-size:10px;margin-left:6px">● Masqué</span>')
+            + '</div></div>'
+            + '<div style="padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px">'
+            + '<span style="font-size:11px;color:rgba(255,255,255,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="'+img.nom+'">'+(img.nom||'Sans titre')+'</span>'
+            + '<div style="display:flex;gap:4px;flex-shrink:0">'
+            + '<button onclick="toggleHeroImage(\''+img.id+'\','+img.actif+')" class="admin-sm-btn" style="font-size:10px">'+(img.actif?'Masquer':'Afficher')+'</button>'
+            + '<button onclick="deleteHeroImage(\''+img.id+'\',\''+img.nom+'\')" class="admin-sm-btn" style="font-size:10px;color:#ff4444">✕</button>'
+            + '</div></div></div>';
+        }).join('')
+      + '</div>';
+  } catch(e) {
+    el.innerHTML = '<div style="color:#ff4444;font-size:13px;padding:8px">Erreur : ' + e.message + '</div>';
+  }
+}
+
+function showUploadHeroImageModal() {
+  var body = '<div class="admin-form-group">'
+    + '<label class="admin-label">Image (JPG, PNG, WebP — max 5 Mo) *</label>'
+    + '<input type="file" id="hero-img-file" accept="image/*" class="admin-input" style="padding:8px">'
+    + '</div>'
+    + '<div class="admin-form-group" style="margin-top:10px">'
+    + '<label class="admin-label">Titre / description (optionnel)</label>'
+    + '<input class="admin-input" id="hero-img-nom" placeholder="Ex : Salon appartement Vue Mer">'
+    + '</div>'
+    + '<div id="hero-upload-progress" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.5);display:none">Téléversement en cours…</div>'
+    + '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,.04);border-radius:4px;font-size:11px;color:rgba(255,255,255,.4);line-height:1.7">'
+    + '💡 L\'image sera automatiquement ajoutée au carrousel de la page d\'accueil.<br>'
+    + '📐 Taille recommandée : 1400 × 900 px minimum.</div>';
+  showAdminModal('Ajouter une image Hero', body, 'Téléverser', 'uploadHeroImage()');
+}
+
+async function uploadHeroImage() {
+  var fileInput = document.getElementById('hero-img-file');
+  var nomInput  = document.getElementById('hero-img-nom');
+  var progress  = document.getElementById('hero-upload-progress');
+  var file = fileInput ? fileInput.files[0] : null;
+  if (!file) { showToast('Sélectionnez une image', 'error'); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast('Image trop lourde (max 5 Mo)', 'error'); return; }
+  var nom = (nomInput ? nomInput.value.trim() : '') || file.name.replace(/\.[^.]+$/, '');
+  if (progress) progress.style.display = 'block';
+  try {
+    // 1. Compter les images existantes pour déterminer l'ordre
+    var { data: existing } = await sb.from('hero_images').select('id').order('ordre');
+    var ordre = existing ? existing.length : 0;
+    // 2. Upload dans Supabase Storage
+    var ext = file.name.split('.').pop().toLowerCase();
+    var fileName = 'hero_' + Date.now() + '_' + Math.random().toString(36).slice(2,7) + '.' + ext;
+    var { data: upData, error: upErr } = await sb.storage
+      .from(HERO_BUCKET).upload(fileName, file, { cacheControl: '3600', upsert: false });
+    if (upErr) throw new Error('Upload échoué : ' + upErr.message);
+    // 3. Récupérer l'URL publique
+    var { data: urlData } = sb.storage.from(HERO_BUCKET).getPublicUrl(fileName);
+    var url = urlData.publicUrl;
+    // 4. Enregistrer en base
+    var { error: dbErr } = await sb.from('hero_images').insert([{
+      url: url, nom: nom, ordre: ordre, actif: true
+    }]);
+    if (dbErr) throw new Error('DB : ' + dbErr.message);
+    showToast('Image ajoutée avec succès !', 'success');
+    closeAdminModal();
+    loadHeroImages();
+    initHeroImages(); // Rafraîchir le carrousel live
+  } catch(e) {
+    showToast('Erreur : ' + e.message, 'error');
+    if (progress) progress.style.display = 'none';
+  }
+}
+
+async function deleteHeroImage(id, nom) {
+  if (!confirm('Supprimer l\'image « ' + nom + ' » du carrousel ?')) return;
+  try {
+    // Récupérer l'URL pour extraire le path Storage
+    var { data: img } = await sb.from('hero_images').select('url').eq('id', id).single();
+    await sb.from('hero_images').delete().eq('id', id);
+    // Supprimer du Storage si on peut extraire le path
+    if (img && img.url) {
+      var path = img.url.split('/' + HERO_BUCKET + '/').pop();
+      if (path) await sb.storage.from(HERO_BUCKET).remove([path]);
+    }
+    showToast('Image supprimée', 'success');
+    loadHeroImages();
+    initHeroImages();
+  } catch(e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
+}
+
+async function toggleHeroImage(id, currentActif) {
+  await sb.from('hero_images').update({ actif: !currentActif }).eq('id', id);
+  showToast(currentActif ? 'Image masquée du carrousel' : 'Image réactivée', 'success');
+  loadHeroImages();
+  initHeroImages();
+}
+
+async function moveHeroImage(id, newOrdre) {
+  if (newOrdre < 0) return;
+  await sb.from('hero_images').update({ ordre: newOrdre }).eq('id', id);
+  loadHeroImages();
+}
+
+
   var validPages = ['home','appartements','reservation','contact','admin'];
   var startPage = 'home';
   try {
@@ -5636,6 +5862,8 @@ function safeSetPage(page) {
   goTo(startPage);
   // Charger les paramètres du site dès le démarrage
   initSiteParametres();
+  // Charger les emails des gérants depuis la DB (dynamique, sans hardcode)
+  loadAdminEmailsFromDB();
 })();
 
 // Bouton Retour/Avant du navigateur
@@ -5658,6 +5886,7 @@ window.addEventListener('popstate', function(e) {
   if(page==='home') {
     if(window._adminJustSaved) { cachedApts=null; window._adminJustSaved=false; }
     loadHomeApts();
+    initHeroImages();
   }
   if(page==='appartements') loadAllApts();
   if(page==='reservation')  loadResaPage();
