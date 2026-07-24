@@ -960,69 +960,41 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 .cancel-error-box{background:#fff5f5;border:1px solid #f5c6cb;border-radius:var(--radius);
   padding:12px 14px;font-size:13px;color:#721c24;margin-top:12px;display:none;line-height:1.6}
 /* ═══════════════════════════════════════════
-   CHAMP TÉLÉPHONE AVEC INDICATIF — DROPDOWN PREMIUM
+   CHAMP TÉLÉPHONE — DROPDOWN PREMIUM
 ═══════════════════════════════════════════ */
 .phone-field{display:flex;gap:0;position:relative;align-items:stretch}
 .phone-number-input{border-radius:0 var(--radius) var(--radius) 0!important;flex:1}
-
-/* Bouton déclencheur */
 .phone-dial-btn{
   display:inline-flex;align-items:center;gap:6px;
-  background:var(--white);
-  border:1px solid rgba(27,46,122,.18);border-right:none;
+  background:var(--white);border:1px solid rgba(27,46,122,.18);border-right:none;
   border-radius:var(--radius) 0 0 var(--radius);
-  padding:0 10px 0 8px;
-  cursor:pointer;white-space:nowrap;min-width:86px;
-  transition:border-color .2s;user-select:none;outline:none;
-  font-family:'Inter',sans-serif;
+  padding:0 10px 0 8px;cursor:pointer;white-space:nowrap;min-width:86px;
+  transition:border-color .2s;user-select:none;outline:none;font-family:'Inter',sans-serif;
 }
 .phone-dial-btn:focus,.phone-dial-btn.open{border-color:var(--blue);z-index:2}
 .phone-dial-btn .dial-flag{font-size:18px;line-height:1;flex-shrink:0}
-.phone-dial-btn .dial-code{font-size:12.5px;font-weight:500;color:var(--ink);letter-spacing:.01em}
-.phone-dial-btn .dial-caret{
-  font-size:8px;color:#9CA3AF;margin-left:1px;
-  transition:transform .18s;display:inline-block;flex-shrink:0;
-}
+.phone-dial-btn .dial-code{font-size:12.5px;font-weight:500;color:var(--ink)}
+.phone-dial-btn .dial-caret{font-size:8px;color:#9CA3AF;margin-left:1px;transition:transform .18s;flex-shrink:0}
 .phone-dial-btn.open .dial-caret{transform:rotate(180deg)}
-
-/* Panneau liste déroulante */
 .phone-dial-dropdown{
   position:absolute;top:calc(100% + 6px);left:0;z-index:600;
-  background:var(--white);
-  border:1px solid rgba(27,46,122,.15);
-  border-radius:6px;
-  box-shadow:0 12px 36px rgba(27,46,122,.16);
+  background:var(--white);border:1px solid rgba(27,46,122,.15);
+  border-radius:6px;box-shadow:0 12px 36px rgba(27,46,122,.16);
   min-width:256px;max-height:260px;overflow:hidden;
   display:none;flex-direction:column;
 }
 .phone-dial-dropdown.open{display:flex}
-
-/* Barre de recherche sticky */
-.phone-dial-search{
-  padding:8px 10px;
-  border-bottom:1px solid rgba(27,46,122,.08);
-  background:var(--white);flex-shrink:0;
-}
+.phone-dial-search{padding:8px 10px;border-bottom:1px solid rgba(27,46,122,.08);background:var(--white);flex-shrink:0}
 .phone-dial-search input{
-  width:100%;border:1px solid rgba(27,46,122,.18);
-  border-radius:4px;padding:6px 10px 6px 30px;
-  font-size:12.5px;color:var(--ink);outline:none;
+  width:100%;border:1px solid rgba(27,46,122,.18);border-radius:4px;
+  padding:6px 10px 6px 30px;font-size:12.5px;color:var(--ink);outline:none;
   font-family:'Inter',sans-serif;
-  background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") 8px center no-repeat;
+  background:var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") 8px center no-repeat;
 }
 .phone-dial-search input:focus{border-color:var(--blue)}
-
-/* Liste scrollable */
 .phone-dial-list{overflow-y:auto;flex:1}
-
-/* Chaque option */
-.phone-dial-option{
-  display:flex;align-items:center;gap:10px;
-  padding:9px 12px;cursor:pointer;
-  transition:background .12s;
-}
-.phone-dial-option:hover,.phone-dial-option:focus{background:#EEF2FF}
-.phone-dial-option.selected{background:#EEF2FF}
+.phone-dial-option{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;transition:background .12s}
+.phone-dial-option:hover,.phone-dial-option.selected{background:#EEF2FF}
 .phone-dial-option .opt-flag{font-size:20px;flex-shrink:0;width:26px;text-align:center;line-height:1}
 .phone-dial-option .opt-name{flex:1;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .phone-dial-option .opt-code{font-size:12.5px;color:var(--muted);font-weight:500;flex-shrink:0}
@@ -2472,6 +2444,25 @@ function showToast(msg, type) {
 }
 
 // ─────────────────────────────────────────────────────────
+// PASSAGE AUTOMATIQUE STATUT → "termine"
+// Appelé au chargement de l'admin et lors de la recherche
+// d'annulation. Met à jour en base toutes les réservations
+// confirmées dont la date de départ est dépassée.
+// ─────────────────────────────────────────────────────────
+async function autoTerminerResasEcoulees() {
+  if (IS_SRCDOC) return;
+  try {
+    var today = todayISO();
+    await sb.from('reservations')
+      .update({ statut: 'termine' })
+      .eq('statut', 'confirme')
+      .lt('date_depart', today);
+  } catch(e) {
+    console.warn('[autoTerminer] Erreur :', e.message);
+  }
+}
+
+// ─────────────────────────────────────────────────────────
 // UTILITAIRES
 // ─────────────────────────────────────────────────────────
 function fmt(n) {
@@ -2894,7 +2885,6 @@ function closeAptDetail() {
 // ─────────────────────────────────────────────────────────
 // FORMULAIRE RÉSERVATION (réutilisable)
 // ─────────────────────────────────────────────────────────
-// Indicatifs pays — liste complète triée (Bénin en premier)
 var PHONE_CODES = [
   { code:'+229', flag:'🇧🇯', name:'Bénin' },
   { code:'+213', flag:'🇩🇿', name:'Algérie' },
@@ -2949,7 +2939,6 @@ var PHONE_CODES = [
   { code:'+260', flag:'🇿🇲', name:'Zambie' },
   { code:'+263', flag:'🇿🇼', name:'Zimbabwe' },
   { code:'+237', flag:'🇨🇲', name:'Cameroun' },
-  // Europe & Amériques
   { code:'+33',  flag:'🇫🇷', name:'France' },
   { code:'+41',  flag:'🇨🇭', name:'Suisse' },
   { code:'+1',   flag:'🇺🇸', name:'USA / Canada' },
@@ -2966,7 +2955,7 @@ var PHONE_CODES = [
 ];
 
 function buildPhoneCodeSelect(prefix) {
-  var def = PHONE_CODES[0]; // Bénin
+  var def = PHONE_CODES[0];
   var items = PHONE_CODES.map(function(c) {
     return '<div class="phone-dial-option'+(c.code===def.code?' selected':'')+'" '
       +'data-code="'+c.code+'" data-flag="'+c.flag+'" data-name="'+c.name+'" '
@@ -2978,17 +2967,16 @@ function buildPhoneCodeSelect(prefix) {
       +'<span class="opt-code">'+c.code+'</span>'
       +'</div>';
   }).join('');
-
   return '<input type="hidden" id="'+prefix+'-tel-code" value="'+def.code+'">'
     +'<button type="button" class="phone-dial-btn" id="'+prefix+'-dial-btn" '
     +'onclick="toggleDial(event,\''+prefix+'\')" aria-haspopup="listbox" aria-expanded="false">'
     +'<span class="dial-flag" id="'+prefix+'-dial-flag">'+def.flag+'</span>'
     +'<span class="dial-code" id="'+prefix+'-dial-code">'+def.code+'</span>'
-    +'<span class="dial-caret">▼</span>'
+    +'<span class="dial-caret">\u25bc</span>'
     +'</button>'
     +'<div class="phone-dial-dropdown" id="'+prefix+'-dial-drop" role="listbox">'
     +'<div class="phone-dial-search">'
-    +'<input type="text" placeholder="Rechercher un pays…" autocomplete="off" '
+    +'<input type="text" placeholder="Rechercher un pays\u2026" autocomplete="off" '
     +'oninput="filterDial(this,\''+prefix+'\')">'
     +'</div>'
     +'<div class="phone-dial-list" id="'+prefix+'-dial-list">'+items+'</div>'
@@ -2997,64 +2985,50 @@ function buildPhoneCodeSelect(prefix) {
 
 function toggleDial(e, prefix) {
   e.stopPropagation();
-  var btn  = document.getElementById(prefix+'-dial-btn');
-  var drop = document.getElementById(prefix+'-dial-drop');
+  var btn=document.getElementById(prefix+'-dial-btn');
+  var drop=document.getElementById(prefix+'-dial-drop');
   if(!btn||!drop) return;
-  var opening = !drop.classList.contains('open');
-  // Fermer tous les dropdowns ouverts
-  document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){ d.classList.remove('open'); });
-  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){ b.classList.remove('open'); b.setAttribute('aria-expanded','false'); });
-  if(opening) {
-    drop.classList.add('open');
-    btn.classList.add('open');
-    btn.setAttribute('aria-expanded','true');
-    var si = drop.querySelector('input');
-    if(si){ si.value=''; filterDial(si, prefix); setTimeout(function(){ si.focus(); },50); }
-    // Scroll vers l'option sélectionnée
-    var sel = document.querySelector('#'+prefix+'-dial-list .phone-dial-option.selected');
-    if(sel) setTimeout(function(){ sel.scrollIntoView({block:'nearest'}); },60);
+  var opening=!drop.classList.contains('open');
+  document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){d.classList.remove('open');});
+  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){b.classList.remove('open');b.setAttribute('aria-expanded','false');});
+  if(opening){
+    drop.classList.add('open'); btn.classList.add('open'); btn.setAttribute('aria-expanded','true');
+    var si=drop.querySelector('input');
+    if(si){si.value='';filterDial(si,prefix);setTimeout(function(){si.focus();},50);}
+    var sel=document.querySelector('#'+prefix+'-dial-list .phone-dial-option.selected');
+    if(sel) setTimeout(function(){sel.scrollIntoView({block:'nearest'});},60);
   }
 }
 
 function dialSelect(optEl, prefix) {
-  var code = optEl.getAttribute('data-code');
-  var flag = optEl.getAttribute('data-flag');
-  var hidden = document.getElementById(prefix+'-tel-code');
-  var flagEl = document.getElementById(prefix+'-dial-flag');
-  var codeEl = document.getElementById(prefix+'-dial-code');
-  if(hidden) hidden.value = code;
-  if(flagEl) flagEl.textContent = flag;
-  if(codeEl) codeEl.textContent = code;
-  // Marquer sélectionné
-  var list = document.getElementById(prefix+'-dial-list');
-  if(list) list.querySelectorAll('.phone-dial-option').forEach(function(o){
-    o.classList.toggle('selected', o===optEl);
-  });
-  // Fermer
-  var drop = document.getElementById(prefix+'-dial-drop');
-  var btn  = document.getElementById(prefix+'-dial-btn');
-  if(drop){ drop.classList.remove('open'); }
-  if(btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
-  // Mettre le focus sur le champ numéro
-  var tel = document.getElementById(prefix+'-tel');
-  if(tel) tel.focus();
+  var code=optEl.getAttribute('data-code');
+  var flag=optEl.getAttribute('data-flag');
+  var h=document.getElementById(prefix+'-tel-code');
+  var f=document.getElementById(prefix+'-dial-flag');
+  var c=document.getElementById(prefix+'-dial-code');
+  if(h) h.value=code; if(f) f.textContent=flag; if(c) c.textContent=code;
+  var list=document.getElementById(prefix+'-dial-list');
+  if(list) list.querySelectorAll('.phone-dial-option').forEach(function(o){o.classList.toggle('selected',o===optEl);});
+  var drop=document.getElementById(prefix+'-dial-drop');
+  var btn=document.getElementById(prefix+'-dial-btn');
+  if(drop){drop.classList.remove('open');} if(btn){btn.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+  var tel=document.getElementById(prefix+'-tel'); if(tel) tel.focus();
 }
 
 function filterDial(input, prefix) {
-  var q = (input.value||'').toLowerCase().trim();
-  var list = document.getElementById(prefix+'-dial-list');
+  var q=(input.value||'').toLowerCase().trim();
+  var list=document.getElementById(prefix+'-dial-list');
   if(!list) return;
   list.querySelectorAll('.phone-dial-option').forEach(function(o){
-    var n = (o.getAttribute('data-name')||'').toLowerCase();
-    var c = (o.getAttribute('data-code')||'').toLowerCase();
-    o.style.display = (!q || n.indexOf(q)>=0 || c.indexOf(q)>=0) ? '' : 'none';
+    var n=(o.getAttribute('data-name')||'').toLowerCase();
+    var c=(o.getAttribute('data-code')||'').toLowerCase();
+    o.style.display=(!q||n.indexOf(q)>=0||c.indexOf(q)>=0)?'':'none';
   });
 }
 
-// Fermer les dropdowns au clic extérieur
-document.addEventListener('click', function(){
-  document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){ d.classList.remove('open'); });
-  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){ b.classList.remove('open'); b.setAttribute('aria-expanded','false'); });
+document.addEventListener('click',function(){
+  document.querySelectorAll('.phone-dial-dropdown.open').forEach(function(d){d.classList.remove('open');});
+  document.querySelectorAll('.phone-dial-btn.open').forEach(function(b){b.classList.remove('open');b.setAttribute('aria-expanded','false');});
 });
 
 function buildPaymentMethods(prefix) {
@@ -3098,7 +3072,6 @@ function buildBookForm(prefix, apt) {
     +'<div class="price-summary" id="'+prefix+'-price">'
     +'<div class="price-row"><span>Tarif par nuit</span><span>'+fmt(apt.prix_nuit)+' FCFA</span></div>'
     +'<div class="price-row"><span>Nombre de nuits</span><span id="'+prefix+'-nights">—</span></div>'
-    +'<div class="price-row"><span>Frais de service</span><span>'+fmt(apt.frais_service||2500)+' FCFA</span></div>'
     +'<div class="price-total-row"><span>Total</span><span id="'+prefix+'-total">—</span></div>'
     +'</div>'
     +'<div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:12px 0 8px">Mode de paiement</div>'
@@ -3153,7 +3126,7 @@ function updateBookPrice(prefix, apt) {
   var n = calcNuits(arr, dep);
   if(n<=0){ priceEl.style.display='none'; return; }
   document.getElementById(prefix+'-nights').textContent = n+' nuit'+(n>1?'s':'');
-  document.getElementById(prefix+'-total').textContent = fmt(n*(apt.prix_nuit||25000)+(apt.frais_service||2500))+' FCFA';
+  document.getElementById(prefix+'-total').textContent = fmt(n*(apt.prix_nuit||25000))+' FCFA';
   priceEl.style.display='block';
   // Vérif dispo
   clearTimeout(dispoTimeout);
@@ -3201,19 +3174,15 @@ async function submitResa(prefix, aptId) {
     return opt ? opt.textContent.trim() : 'MTN MoMo';
   })();
   var errShown=false;
-  // Validation indépendante de chaque champ
   var nomErr=document.getElementById(prefix+'-nom-err');
   if(nomErr) nomErr.classList.remove('show');
   if(!nom.trim()&&nomErr){nomErr.classList.add('show');errShown=true;}
-  // Téléphone : valider le numéro saisi (pas l'indicatif)
   var telErr=document.getElementById(prefix+'-tel-err');
   if(telErr) telErr.classList.remove('show');
   if(!num.trim()&&telErr){telErr.classList.add('show');errShown=true;}
-  // Email
   var emailErrEl=document.getElementById(prefix+'-email-err');
   if(emailErrEl) emailErrEl.classList.remove('show');
   if(!email.trim()&&emailErrEl){emailErrEl.classList.add('show');errShown=true;}
-  // Dates
   var arrErrEl=document.getElementById(prefix+'-arr-err');
   var depErrEl=document.getElementById(prefix+'-dep-err');
   if(arrErrEl) arrErrEl.classList.remove('show');
@@ -3238,8 +3207,8 @@ async function submitResa(prefix, aptId) {
   var btn=document.getElementById(prefix+'-submit');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Traitement…';}
 
-  var montant=(n*Number(apt.prix_nuit))+(Number(apt.frais_service)||2500);
-  var ref=genRef();
+  var montant = n * Number(apt.prix_nuit);
+  var ref = genRef();
 
   var { data, error } = await sb.from('reservations').insert([{
     reference:        ref,
@@ -3250,7 +3219,6 @@ async function submitResa(prefix, aptId) {
     date_arrivee:     arr,
     date_depart:      dep,
     prix_nuit:        apt.prix_nuit,
-    frais_service:    apt.frais_service||2500,
     montant_total:    montant,
     methode_paiement: methode,
     statut:           'confirme',
@@ -3414,60 +3382,42 @@ function cancelGoBack() {
   cancelHideError('cancel-err-2');
 }
 
-// Étape 1 → recherche de la réservation (directement via Supabase)
 async function rechercherResa() {
   cancelHideError('cancel-err-1');
   var ref = ((document.getElementById('cancel-ref-input')||{}).value||'').trim().toUpperCase();
   if(!ref) { cancelShowError('cancel-err-1','Veuillez saisir votre référence de réservation.'); return; }
-
-  if(IS_SRCDOC) {
-    showToast('Non disponible en prévisualisation — déployez le site.','info');
-    return;
-  }
-
+  if(IS_SRCDOC) { showToast('Non disponible en prévisualisation.','info'); return; }
   var btn = document.getElementById('cancel-search-btn');
-  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Recherche…'; }
-
+  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Recherche\u2026'; }
   try {
-    // Recherche directement dans Supabase sans passer par l'Edge Function
+    await autoTerminerResasEcoulees();
     var result = await sb.from('reservations')
-      .select('id, reference, statut, statut_paiement, client_nom, client_tel, client_email, date_arrivee, date_depart, montant_total, methode_paiement, appartement_id, appartements(nom, adresse, ville)')
+      .select('id,reference,statut,statut_paiement,client_nom,client_tel,client_email,date_arrivee,date_depart,montant_total,methode_paiement,appartements(nom,adresse,ville)')
       .eq('reference', ref)
       .neq('statut', 'annule')
       .maybeSingle();
-
     if(result.error) throw new Error(result.error.message);
-
     if(!result.data) {
-      cancelShowError('cancel-err-1', 'Réservation introuvable. Vérifiez la référence ou cette réservation a déjà été annulée.');
+      cancelShowError('cancel-err-1','R\u00e9servation introuvable. V\u00e9rifiez la r\u00e9f\u00e9rence ou cette r\u00e9servation a d\u00e9j\u00e0 \u00e9t\u00e9 annul\u00e9e.');
       return;
     }
-
     var r = result.data;
-    // Normaliser les champs pour renderResaPreview
     var apt = r.appartements || {};
     _cancelResaData = {
-      id:               r.id,
-      reference:        r.reference,
-      statut:           r.statut,
-      statut_paiement:  r.statut_paiement,
-      client_nom:       r.client_nom,
-      client_tel:       r.client_tel,
-      client_email:     r.client_email,
-      date_arrivee:     r.date_arrivee,
-      date_depart:      r.date_depart,
-      montant_total:    r.montant_total,
-      methode_paiement: r.methode_paiement,
-      apt_nom:          apt.nom || '—',
-      apt_adresse:      apt.adresse || (apt.ville || 'Cotonou, Bénin'),
+      id: r.id, reference: r.reference, statut: r.statut,
+      statut_paiement: r.statut_paiement, client_nom: r.client_nom,
+      client_tel: r.client_tel, client_email: r.client_email,
+      date_arrivee: r.date_arrivee, date_depart: r.date_depart,
+      montant_total: r.montant_total, methode_paiement: r.methode_paiement,
+      apt_nom: apt.nom||'\u2014',
+      apt_adresse: apt.adresse||(apt.ville||'Cotonou, B\u00e9nin')
     };
     renderResaPreview(_cancelResaData);
     cancelShowStep(2);
-
   } catch(e) {
-    cancelShowError('cancel-err-1', 'Erreur de connexion : ' + (e.message || 'Réessayez dans un instant.'));
+    cancelShowError('cancel-err-1','Erreur de connexion : '+(e.message||'R\u00e9essayez dans un instant.'));
   } finally {
-    if(btn) { btn.disabled=false; btn.textContent='Rechercher ma réservation →'; }
+    if(btn) { btn.disabled=false; btn.textContent='Rechercher ma r\u00e9servation \u2192'; }
   }
 }
 
@@ -3475,6 +3425,13 @@ async function rechercherResa() {
 function renderResaPreview(r) {
   var el = document.getElementById('cancel-resa-preview');
   if(!el) return;
+  // Traduction du statut de réservation (r.statut) — pas du statut paiement
+  var statutLabel = {
+    'confirme':   '✅ Réservation confirmée',
+    'en_attente': '⏳ En attente de confirmation',
+    'termine':    '🏁 Séjour terminé',
+    'annule':     '❌ Annulée'
+  }[r.statut] || ('⏳ ' + (r.statut || 'En attente'));
   var rows = [
     ['Appartement',  r.apt_nom],
     ['Adresse',      r.apt_adresse||'Cotonou, Bénin'],
@@ -3483,7 +3440,7 @@ function renderResaPreview(r) {
     ['Client',       r.client_nom],
     ['Montant',      fmtMontant(r.montant_total)],
     ['Paiement',     r.methode_paiement],
-    ['Statut',       r.statut_paiement === 'payé' ? '💳 Payé' : '⏳ En attente'],
+    ['Statut',       statutLabel],
   ];
   el.innerHTML = '<div class="resa-preview-ref">📋 Réf : '+r.reference+'</div>'
     + rows.map(function(row){
@@ -3501,47 +3458,28 @@ function renderResaPreview(r) {
 async function confirmerAnnulation() {
   if(!_cancelResaData) { cancelGoBack(); return; }
   cancelHideError('cancel-err-2');
-
   var btn = document.getElementById('cancel-confirm-btn');
-  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Annulation…'; }
-
+  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Annulation\u2026'; }
   try {
-    // Mettre à jour le statut directement dans Supabase
     var result = await sb.from('reservations')
       .update({ statut: 'annule' })
       .eq('reference', _cancelResaData.reference)
       .eq('id', _cancelResaData.id);
-
     if(result.error) throw new Error(result.error.message);
-
-    // Tentative d'alerte via WhatsApp (non bloquante)
-    try {
-      var waMsg = encodeURIComponent(
-        '❌ Annulation de réservation\nRéf : ' + _cancelResaData.reference
-        + '\nClient : ' + _cancelResaData.client_nom
-        + '\nArrivée : ' + fmtDate(_cancelResaData.date_arrivee)
-        + '\nDépart : ' + fmtDate(_cancelResaData.date_depart)
-      );
-      // Log seulement — pas d'ouverture automatique pour ne pas perturber l'UX
-      console.log('[Annulation] Notification WhatsApp gérant :', 'https://wa.me/'+WHATSAPP_NUMBER+'?text='+waMsg);
-    } catch(_) {}
-
-    // Succès
     var msgEl = document.getElementById('cancel-success-msg');
     if(msgEl) {
-      msgEl.innerHTML = 'Votre réservation <strong>'+_cancelResaData.reference+'</strong>'
-        +' a bien été annulée.<br><br>'
-        +'Le gérant a été notifié. Un e-mail de confirmation vous sera envoyé.<br><br>'
-        +'<span style="color:#e07b00;font-size:13px">⚠️ Conformément aux conditions de réservation, '
-        +'l\'acompte de <strong>5 000 FCFA</strong> versé lors de la réservation '
+      msgEl.innerHTML = 'Votre r\u00e9servation <strong>'+_cancelResaData.reference+'</strong>'
+        +' a bien \u00e9t\u00e9 annul\u00e9e.<br><br>'
+        +'Le g\u00e9rant a \u00e9t\u00e9 notifi\u00e9. Un e-mail de confirmation vous sera envoy\u00e9.<br><br>'
+        +'<span style="color:#e07b00;font-size:13px">\u26a0\ufe0f Conform\u00e9ment aux conditions de r\u00e9servation, '
+        +'l\'acompte de <strong>5\u202f000\u00a0FCFA</strong> vers\u00e9 lors de la r\u00e9servation '
         +'est non remboursable.</span>';
     }
     cancelShowStep(3);
-    showToast('Réservation '+_cancelResaData.reference+' annulée avec succès.','success');
+    showToast('R\u00e9servation '+_cancelResaData.reference+' annul\u00e9e avec succ\u00e8s.','success');
     _cancelResaData = null;
-
   } catch(e) {
-    cancelShowError('cancel-err-2', 'Erreur : ' + (e.message || 'Réessayez dans un instant.'));
+    cancelShowError('cancel-err-2','Erreur : '+(e.message||'R\u00e9essayez dans un instant.'));
   } finally {
     if(btn) { btn.disabled=false; btn.textContent='Confirmer l\'annulation'; }
   }
@@ -3669,6 +3607,8 @@ function showAdminDashboard(user) {
   document.getElementById('admin-login-view').style.display    = 'none';
   document.getElementById('admin-dashboard-view').style.display = 'block';
   document.getElementById('admin-email-display').textContent   = user.email;
+  // Passage automatique des réservations écoulées à "Terminée"
+  autoTerminerResasEcoulees();
 
   // Détecter le Super Admin
   window._superAdmin = (user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
