@@ -131,6 +131,7 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
   background-image:url('https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=80')}
 .hero-slide:nth-child(4){animation-delay:15s;
   background-image:url('https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=700&q=80')}
+/* ↑ Fallbacks Unsplash — remplacés dynamiquement par initHeroImages() si des images sont en base */
 @keyframes heroSlide{
   0%,4%   {opacity:0}
   8%,22%  {opacity:1}
@@ -1745,6 +1746,9 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
           <a class="admin-sidebar-link" data-section="contenu" onclick="adminNav(this,'contenu')">
             <span>✏️</span> Textes &amp; Bannières
           </a>
+          <a class="admin-sidebar-link" data-section="hero-images" onclick="adminNav(this,'hero-images')">
+            <span>🖼️</span> Images du Hero
+          </a>
           <a class="admin-sidebar-link" data-section="faq" onclick="adminNav(this,'faq')">
             <span>❓</span> FAQ
           </a>
@@ -2077,6 +2081,43 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
         </div>
 
         <!-- ── FAQ ── -->
+        <div class="admin-section" id="sec-hero-images">
+          <div class="admin-page-title">Images du Hero — Carrousel d'accueil</div>
+          <div class="admin-card" style="padding:12px 14px;margin-bottom:14px;border-left:3px solid #d4af37">
+            <div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.8">
+              Ces images s'affichent en rotation dans le carrousel de la page d'accueil.<br>
+              Ajoutez les vraies photos de vos appartements pour remplacer les images fictives.<br>
+              <strong style="color:#d4af37">📐 Taille recommandée : 1 400 × 900 px — JPG, PNG ou WebP — max 5 Mo.</strong>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+            <button class="admin-primary-btn" onclick="showUploadHeroModal()">+ Téléverser une image</button>
+            <button class="admin-sm-btn" onclick="loadHeroImages()">🔄 Actualiser</button>
+          </div>
+          <div id="hero-img-grid">
+            <div style="color:rgba(255,255,255,.35);font-size:13px;padding:12px">Chargement…</div>
+          </div>
+          <div class="admin-card" style="padding:14px;margin-top:18px;border:1px solid rgba(212,175,55,.2)">
+            <div class="admin-card-title" style="color:#d4af37;margin-bottom:8px">⚙️ Configuration Supabase — à faire une seule fois</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,.45);line-height:2">
+              <strong>1. SQL Editor</strong> → exécuter :<br>
+              <code style="display:block;font-size:10.5px;padding:10px 12px;background:rgba(0,0,0,.35);border-radius:4px;line-height:1.9;white-space:pre;margin:6px 0 10px">CREATE TABLE IF NOT EXISTS hero_images (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  url         TEXT NOT NULL,
+  nom         TEXT,
+  ordre       INT DEFAULT 0,
+  actif       BOOLEAN DEFAULT true,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE hero_images ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read"  ON hero_images FOR SELECT USING (true);
+CREATE POLICY "Admin write"  ON hero_images FOR ALL   USING (auth.role() = 'authenticated');</code>
+              <strong>2. Storage</strong> → New Bucket → nommer <code>hero-images</code> → cocher <strong>Public bucket</strong> → Create.
+            </div>
+          </div>
+        </div>
+
+        <!-- ── FAQ ── -->
         <div class="admin-section" id="sec-faq">
           <div class="admin-page-title">FAQ</div>
           <div style="display:flex;gap:8px;margin-bottom:16px">
@@ -2087,7 +2128,7 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 
         <!-- ── UTILISATEURS ── -->
         <div class="admin-section" id="sec-utilisateurs">
-          <div class="admin-page-title">Utilisateurs administrateurs</div>
+          <div class="admin-page-title">Gérants de la plateforme</div>
 
           <!-- Info accès visible par tous -->
           <div class="admin-card" style="padding:14px;margin-bottom:12px">
@@ -2100,7 +2141,7 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
           <!-- Actions Super Admin uniquement -->
           <div class="super-admin-only">
             <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-              <button class="admin-primary-btn" onclick="showAddUserModal()">+ Ajouter un administrateur</button>
+              <button class="admin-primary-btn" onclick="showAddUserModal()">+ Ajouter un gérant</button>
               <button class="admin-sm-btn" onclick="loadUtilisateurs()">🔄 Actualiser</button>
             </div>
             <div class="admin-card">
@@ -2240,15 +2281,18 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 var SUPABASE_URL     = 'https://utyimnjxgfeevdhrmgyc.supabase.co';
 var SUPABASE_ANON_KEY = 'sb_publishable_zgAfWEsBGlbu2yffNMAShg_EoDCmmnp';
 
+// ⚠️ Mettez ici l'URL exacte de votre site en production (sans slash final)
+var SITE_URL = 'https://quelquepart.vercel.app';
+
 // Numéro WhatsApp (format international sans +)
 var WHATSAPP_NUMBER = '22900000000';
 
 // ── Emails transactionnels — Backend Resend via Supabase Edge Functions ───────
 var EDGE_FUNCTION_URL = 'https://utyimnjxgfeevdhrmgyc.supabase.co/functions/v1/send-email';
-var ADMIN_EMAILS_JS   = 'gerant1@mail.com,gerant2@mail.com';
+// Emails gérants : plus codés en dur — chargés dynamiquement depuis profils_admins
+var ADMIN_EMAILS_JS   = ''; // Rempli au démarrage par loadAdminEmailsFromDB()
 
-// ── Super Admin — email du compte avec droits étendus ────────────────────────
-// Renseigner l'email du compte Super Admin (doit correspondre au compte Supabase Auth)
+// ── Super Admin ───────────────────────────────────────────────────────────────
 var SUPER_ADMIN_EMAIL = 'superadmin@votredomaine.com';
 
 // ── Méthodes de paiement actives (modifiable depuis Admin → Paramètres) ───────
@@ -2439,6 +2483,7 @@ function goTo(page) {
   if(page==='home') {
     if(window._adminJustSaved) { cachedApts=null; window._adminJustSaved=false; }
     loadHomeApts();
+    initHeroImages();
   }
   if(page==='appartements') {
     // Show the apartment list
@@ -2489,6 +2534,19 @@ function genRef() {
   return 'QP-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*9000)+1000);
 }
 function todayISO() { return new Date().toISOString().split('T')[0]; }
+
+// Passage automatique statut → "termine" pour les réservations dont la date de départ est passée
+async function autoTerminerResasEcoulees() {
+  if (IS_SRCDOC) return;
+  try {
+    await sb.from('reservations')
+      .update({ statut: 'termine' })
+      .eq('statut', 'confirme')
+      .lt('date_depart', todayISO());
+  } catch(e) {
+    console.warn('[autoTerminer]', e.message);
+  }
+}
 function tomorrowISO() {
   var d=new Date(); d.setDate(d.getDate()+1);
   return d.toISOString().split('T')[0];
@@ -2527,7 +2585,7 @@ async function fetchApts(forceRefresh) {
   }
   if (cachedApts && !forceRefresh) return cachedApts;
   var result = await sb.from('appartements')
-    .select('id, nom, slug, ville, pays, adresse, description, prix_nuit, frais_service, chambres, salles_bain, capacite, actif, ordre, equipements(id,nom), images(id,url,principale), videos(id,url,nom,format,ordre)')
+    .select('id, nom, slug, ville, pays, adresse, description, prix_nuit, chambres, salles_bain, capacite, actif, ordre, equipements(id,nom), images(id,url,principale), videos(id,url,nom,format,ordre)')
     .eq('actif', true)
     .order('ordre', { ascending: true });
   if (result.error) {
@@ -3098,7 +3156,6 @@ function buildBookForm(prefix, apt) {
     +'<div class="price-summary" id="'+prefix+'-price">'
     +'<div class="price-row"><span>Tarif par nuit</span><span>'+fmt(apt.prix_nuit)+' FCFA</span></div>'
     +'<div class="price-row"><span>Nombre de nuits</span><span id="'+prefix+'-nights">—</span></div>'
-    +'<div class="price-row"><span>Frais de service</span><span>'+fmt(apt.frais_service||2500)+' FCFA</span></div>'
     +'<div class="price-total-row"><span>Total</span><span id="'+prefix+'-total">—</span></div>'
     +'</div>'
     +'<div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:12px 0 8px">Mode de paiement</div>'
@@ -3153,7 +3210,7 @@ function updateBookPrice(prefix, apt) {
   var n = calcNuits(arr, dep);
   if(n<=0){ priceEl.style.display='none'; return; }
   document.getElementById(prefix+'-nights').textContent = n+' nuit'+(n>1?'s':'');
-  document.getElementById(prefix+'-total').textContent = fmt(n*(apt.prix_nuit||25000)+(apt.frais_service||2500))+' FCFA';
+  document.getElementById(prefix+'-total').textContent  = fmt(n*(apt.prix_nuit||25000))+' FCFA';
   priceEl.style.display='block';
   // Vérif dispo
   clearTimeout(dispoTimeout);
@@ -3238,8 +3295,8 @@ async function submitResa(prefix, aptId) {
   var btn=document.getElementById(prefix+'-submit');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Traitement…';}
 
-  var montant=(n*Number(apt.prix_nuit))+(Number(apt.frais_service)||2500);
-  var ref=genRef();
+  var montant = n * Number(apt.prix_nuit);
+  var ref = genRef();
 
   var { data, error } = await sb.from('reservations').insert([{
     reference:        ref,
@@ -3250,7 +3307,6 @@ async function submitResa(prefix, aptId) {
     date_arrivee:     arr,
     date_depart:      dep,
     prix_nuit:        apt.prix_nuit,
-    frais_service:    apt.frais_service||2500,
     montant_total:    montant,
     methode_paiement: methode,
     statut:           'confirme',
@@ -3483,7 +3539,12 @@ function renderResaPreview(r) {
     ['Client',       r.client_nom],
     ['Montant',      fmtMontant(r.montant_total)],
     ['Paiement',     r.methode_paiement],
-    ['Statut',       r.statut_paiement === 'payé' ? '💳 Payé' : '⏳ En attente'],
+    ['Statut', {
+      'confirme':   '✅ Réservation confirmée',
+      'en_attente': '⏳ En attente de confirmation',
+      'termine':    '🏁 Séjour terminé',
+      'annule':     '❌ Annulée'
+    }[r.statut] || ('⏳ ' + (r.statut || 'En attente'))],
   ];
   el.innerHTML = '<div class="resa-preview-ref">📋 Réf : '+r.reference+'</div>'
     + rows.map(function(row){
@@ -3574,6 +3635,7 @@ function adminNav(linkEl, sectionId) {
     'avis':           loadAvis,
     'notifications':  loadNotifSettings,
     'contenu':        loadContenu,
+    'hero-images':    loadHeroImages,
     'faq':            loadFaq,
     'utilisateurs':   loadUtilisateurs,
     'parametres':     loadParametres,
@@ -3636,33 +3698,99 @@ async function handleForgotPassword() {
   var fb      = document.getElementById('forgot-pw-feedback');
   var email   = (emailEl ? emailEl.value : '').trim();
   if (!email) { showToast('Entrez votre email administrateur', 'error'); return; }
-  if (IS_SRCDOC) {
-    showToast('Non disponible en prévisualisation', 'info');
-    return;
-  }
-  if (fb) { fb.style.display = 'block'; fb.style.color = '#888'; fb.textContent = 'Envoi en cours…'; }
-  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Envoi…'; }
-
-  // Appel à la Edge Function (email #7)
-  // Note : l'admin n'est pas encore connecté ici, donc on utilise un appel sans JWT.
-  // La Edge Function génère le lien via supabase.auth.admin.generateLink
-  // Alternative : utiliser Supabase Auth resetPasswordForEmail directement
+  if (IS_SRCDOC) { showToast('Non disponible en prévisualisation', 'info'); return; }
+  if (fb) { fb.style.display='block'; fb.style.color='#888'; fb.textContent='Envoi en cours…'; }
+  if (btn) { btn.disabled=true; btn.innerHTML='⏳ Envoi…'; }
   try {
-    var redirectTo = window.location.origin + window.location.pathname + '#admin';
+    // Construire l'URL de redirection vers le site réel (jamais localhost)
+    var origin = window.location.origin;
+    if (origin.indexOf('localhost') !== -1 || origin.indexOf('127.0.0.1') !== -1 || origin === 'null' || origin === 'about:') {
+      origin = (typeof SITE_URL !== 'undefined' && SITE_URL) ? SITE_URL.replace(/\/$/, '') : origin;
+    }
+    var redirectTo = origin + window.location.pathname + '#reset-password';
     var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectTo });
     if (res.error) throw new Error(res.error.message);
-    // Tenter aussi d'envoyer notre email brandé via Edge Function (optionnel si non connecté)
-    if (fb) {
-      fb.style.color = '#4caf50';
-      fb.textContent = '✅ Email envoyé à ' + email + '. Vérifiez votre boîte mail.';
-    }
-    showToast('Lien de réinitialisation envoyé à ' + email, 'success');
+    if (fb) { fb.style.color='#4caf50'; fb.textContent='✅ Lien envoyé à ' + email + '. Vérifiez votre boîte mail (et les spams).'; }
+    showToast('Lien de réinitialisation envoyé !', 'success');
   } catch(e) {
-    if (fb) { fb.style.color = '#ff4444'; fb.textContent = '✗ ' + (e.message || 'Erreur inconnue'); }
-    showToast('Erreur : ' + (e.message || 'inconnue'), 'error');
+    if (fb) { fb.style.color='#ff4444'; fb.textContent='✗ ' + (e.message||'Erreur inconnue'); }
+    showToast('Erreur : ' + (e.message||'inconnue'), 'error');
   } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = '📧 Envoyer le lien de réinitialisation'; }
+    if (btn) { btn.disabled=false; btn.innerHTML='📧 Envoyer le lien de réinitialisation'; }
   }
+}
+
+// ── Intercepteur : détecter le token de recovery dans l'URL au chargement ────
+// Supabase insère #access_token=...&type=recovery dans le lien de l'email
+(function handlePasswordRecoveryFromURL() {
+  var hash = window.location.hash || '';
+  if (hash.indexOf('type=recovery') === -1) return;
+  var params = {};
+  hash.replace(/^#/, '').split('&').forEach(function(p) {
+    var kv = p.split('=');
+    params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+  });
+  if (!params.access_token) return;
+  // Établir la session avec le token de recovery
+  // (Supabase v2 : onAuthStateChange avec SIGNED_IN après setSession)
+  sb.auth.setSession({ access_token: params.access_token, refresh_token: params.refresh_token || '' })
+    .then(function(r) {
+      if (!r.error) {
+        // Nettoyer le hash pour éviter une ré-exécution
+        history.replaceState(null, '', window.location.pathname + '#admin');
+        // Afficher la modale de changement de mot de passe
+        setTimeout(showResetPasswordModal, 400);
+      }
+    })
+    .catch(function(e) { console.warn('[Recovery]', e); });
+})();
+
+function showResetPasswordModal() {
+  // Créer la modale si elle n'existe pas encore
+  if (document.getElementById('reset-pw-modal')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'reset-pw-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;'
+    + 'display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.innerHTML =
+    '<div style="background:#1a1f3a;border:1px solid rgba(255,255,255,.12);border-radius:10px;'
+    + 'padding:32px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.6)">'
+    + '<div style="font-family:\'Playfair Display\',serif;font-size:18px;color:#fff;margin-bottom:6px">🔐 Nouveau mot de passe</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:20px">Choisissez un nouveau mot de passe pour votre compte administrateur.</div>'
+    + '<div class="admin-form-group"><label class="admin-label">Nouveau mot de passe *</label>'
+    + '<input class="admin-input" id="reset-pw-new" type="password" placeholder="Minimum 8 caractères" autocomplete="new-password"></div>'
+    + '<div class="admin-form-group" style="margin-top:10px"><label class="admin-label">Confirmer le mot de passe *</label>'
+    + '<input class="admin-input" id="reset-pw-confirm" type="password" placeholder="Répéter le mot de passe" autocomplete="new-password"></div>'
+    + '<div id="reset-pw-msg" style="min-height:18px;font-size:12px;margin-top:8px"></div>'
+    + '<button class="admin-btn" style="width:100%;margin-top:16px" onclick="doResetPassword()">Enregistrer le nouveau mot de passe</button>'
+    + '</div>';
+  document.body.appendChild(overlay);
+  setTimeout(function() { var el = document.getElementById('reset-pw-new'); if(el) el.focus(); }, 100);
+}
+
+async function doResetPassword() {
+  var pw1 = ((document.getElementById('reset-pw-new')    || {}).value || '').trim();
+  var pw2 = ((document.getElementById('reset-pw-confirm') || {}).value || '').trim();
+  var msg = document.getElementById('reset-pw-msg');
+  if (!pw1 || pw1.length < 8) {
+    if (msg) { msg.style.color='#ff4444'; msg.textContent='Le mot de passe doit contenir au moins 8 caractères.'; }
+    return;
+  }
+  if (pw1 !== pw2) {
+    if (msg) { msg.style.color='#ff4444'; msg.textContent='Les deux mots de passe ne correspondent pas.'; }
+    return;
+  }
+  if (msg) { msg.style.color='#aaa'; msg.textContent='Enregistrement…'; }
+  var res = await sb.auth.updateUser({ password: pw1 });
+  if (res.error) {
+    if (msg) { msg.style.color='#ff4444'; msg.textContent='Erreur : ' + res.error.message; }
+    return;
+  }
+  var overlay = document.getElementById('reset-pw-modal');
+  if (overlay) overlay.remove();
+  showToast('✅ Mot de passe mis à jour. Reconnectez-vous.', 'success');
+  await sb.auth.signOut();
+  goTo('admin');
 }
 
 function showAdminDashboard(user) {
@@ -3686,6 +3814,9 @@ function showAdminDashboard(user) {
 
   adminNav(document.querySelector('[data-section="overview"]'), 'overview');
   loadUnreadCount();
+  // Mettre à jour les statuts expirés et rafraîchir les emails gérants
+  autoTerminerResasEcoulees();
+  loadAdminEmailsFromDB();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3976,11 +4107,9 @@ function openAptCrudModal(apt) {
     '<div class="modal-tab-pane active" id="ti">',
     '<div class="admin-form-group"><label class="admin-label">Nom *</label>',
     '<input class="admin-input" id="m-nom" value="' + (apt ? apt.nom : '') + '" placeholder="Ex: Studio Premium Haies Vives" style="margin-bottom:0"></div>',
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">',
+    '<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px">',
     '<div class="admin-form-group"><label class="admin-label">Prix / nuit (FCFA)</label>',
     '<input class="admin-input" id="m-prix" type="number" value="' + (apt ? apt.prix_nuit : 25000) + '" style="margin-bottom:0"></div>',
-    '<div class="admin-form-group"><label class="admin-label">Frais service (FCFA)</label>',
-    '<input class="admin-input" id="m-frais" type="number" value="' + (apt ? apt.frais_service : 2500) + '" style="margin-bottom:0"></div>',
     '</div>',
     '<div class="admin-form-group" style="margin-top:10px"><label class="admin-label">Ville</label>',
     '<input class="admin-input" id="m-ville" value="' + (apt ? apt.ville : 'Cotonou') + '" style="margin-bottom:0"></div>',
@@ -4177,7 +4306,6 @@ async function adminDelPhoto(btn) {
 async function saveAptModal() {
   var nom     = (document.getElementById('m-nom')     || {}).value || '';
   var prix    = parseInt((document.getElementById('m-prix')   || {}).value) || 25000;
-  var frais   = parseInt((document.getElementById('m-frais')  || {}).value) || 2500;
   var ville   = (document.getElementById('m-ville')   || {}).value || 'Cotonou';
   var adresse = (document.getElementById('m-adresse') || {}).value || '';
   var desc    = (document.getElementById('m-desc')    || {}).value || '';
@@ -4199,7 +4327,7 @@ async function saveAptModal() {
   var slug = _modalEditId ? baseSlug : (baseSlug + '-' + Date.now().toString(36));
 
   var data = {
-    slug: slug, nom: nom, prix_nuit: prix, frais_service: frais,
+    slug: slug, nom: nom, prix_nuit: prix,
     ville: ville, adresse: adresse, description: desc,
     chambres: ch, salles_bain: sdb, capacite: cap,
     actif: actif, pays: 'Bénin', ordre: 0
@@ -4987,7 +5115,6 @@ async function deleteFaq(id) {
 // UTILISATEURS — Super Admin
 // ═══════════════════════════════════════════════════════════
 async function loadUtilisateurs() {
-  // Afficher/masquer selon le rôle
   var nonSuper = document.getElementById('users-non-super');
   var superDiv = document.querySelector('.super-admin-only');
   if (!window._superAdmin) {
@@ -5000,46 +5127,61 @@ async function loadUtilisateurs() {
 
   var el = document.getElementById('users-list');
   if (!el) return;
-  el.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:13px;padding:8px">Chargement…</div>';
+  el.innerHTML = '<div style="color:rgba(255,255,255,.35);font-size:13px;padding:8px">Chargement…</div>';
 
-  // Lire la table profils_admins (créer si besoin via SQL Editor)
   var { data, error } = await sb.from('profils_admins').select('*').order('created_at');
 
   if (error && error.code === '42P01') {
-    el.innerHTML = '<div style="color:#ff9800;font-size:13px;padding:8px">'
-      + '⚠️ Table <code>profils_admins</code> manquante.<br>'
-      + 'Exécutez ce SQL dans Supabase SQL Editor :<br><br>'
-      + '<code style="font-size:11px;line-height:1.8">'
-      + 'CREATE TABLE profils_admins (<br>'
+    el.innerHTML = '<div style="color:#ff9800;font-size:12.5px;padding:10px">'
+      + '⚠️ Table <code>profils_admins</code> manquante. Exécutez ce SQL dans Supabase :<br><br>'
+      + '<code style="font-size:10.5px;line-height:1.8">CREATE TABLE profils_admins (<br>'
       + '&nbsp;&nbsp;id UUID PRIMARY KEY DEFAULT gen_random_uuid(),<br>'
       + '&nbsp;&nbsp;email TEXT UNIQUE NOT NULL,<br>'
       + '&nbsp;&nbsp;nom TEXT,<br>'
+      + '&nbsp;&nbsp;telephone TEXT,<br>'
       + '&nbsp;&nbsp;role TEXT DEFAULT \'admin\' CHECK (role IN (\'admin\',\'super_admin\')),<br>'
+      + '&nbsp;&nbsp;notif_email BOOLEAN DEFAULT true,<br>'
       + '&nbsp;&nbsp;actif BOOLEAN DEFAULT true,<br>'
       + '&nbsp;&nbsp;created_at TIMESTAMPTZ DEFAULT NOW()<br>'
-      + ');'
-      + '</code></div>';
+      + '); ALTER TABLE profils_admins ENABLE ROW LEVEL SECURITY;<br>'
+      + 'CREATE POLICY "Admin access" ON profils_admins FOR ALL USING (auth.role() = \'authenticated\');</code></div>';
     return;
   }
 
   if (!data || !data.length) {
-    el.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:13px;padding:8px">Aucun administrateur enregistré. Ajoutez-en un avec le bouton ci-dessus.</div>';
+    el.innerHTML = '<div style="color:rgba(255,255,255,.35);font-size:13px;padding:12px">'
+      + 'Aucun gérant enregistré. Ajoutez le premier avec le bouton ci-dessus.</div>';
     return;
   }
 
   el.innerHTML = data.map(function(u) {
-    var isSelf = (u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
-    return '<div class="admin-user-row">'
-      + '<div>'
+    var isSelf   = (u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
+    var notifBadge = u.notif_email === false
+      ? '<span style="display:inline-block;margin-left:8px;font-size:9.5px;background:rgba(251,146,60,.15);color:#fb923c;padding:1px 6px;border-radius:10px">🔕 Notifs OFF</span>'
+      : '<span style="display:inline-block;margin-left:8px;font-size:9.5px;background:rgba(74,222,128,.1);color:#4ade80;padding:1px 6px;border-radius:10px">🔔 Notifs ON</span>';
+    var statusDot = u.actif
+      ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4ade80;margin-right:5px;flex-shrink:0"></span>'
+      : '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f87171;margin-right:5px;flex-shrink:0"></span>';
+    return '<div class="admin-user-row" style="align-items:flex-start">'
+      + '<div style="display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0">'
+      + statusDot
+      + '<div style="min-width:0">'
       + '<div class="admin-user-email">'+u.email+'</div>'
-      + '<div class="admin-user-meta">'+(u.nom||'—')+' · Ajouté le '+fmtDate((u.created_at||'').slice(0,10))+'</div>'
+      + '<div class="admin-user-meta" style="margin-top:2px">'
+      + (u.nom||'<em style="color:rgba(255,255,255,.25)">Sans nom</em>')
+      + (u.telephone ? ' · 📞 '+u.telephone : '')
+      + ' · <span style="opacity:.6">Ajouté le '+fmtDate((u.created_at||'').slice(0,10))+'</span>'
+      + notifBadge
       + '</div>'
-      + '<div><span class="admin-role-badge '+(u.role==='super_admin'?'role-super':'role-admin')+'">'+(u.role==='super_admin'?'⭐ Super Admin':'Admin')+'</span></div>'
-      + '<div style="display:flex;gap:6px">'
+      + '</div></div>'
+      + '<div style="flex-shrink:0"><span class="admin-role-badge '+(u.role==='super_admin'?'role-super':'role-admin')+'">'
+      + (u.role==='super_admin'?'⭐ Super Admin':'👤 Gérant')+'</span></div>'
+      + '<div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0">'
+      + (isSelf ? '' : '<button class="admin-sm-btn" onclick="editAdminUser(\''+u.id+'\')" style="font-size:9.5px">✏️ Modifier</button>')
       + (u.actif
-        ? '<button class="admin-sm-btn" onclick="toggleAdminUser(\''+u.id+'\',false)" style="font-size:10px"'+(isSelf?' disabled title="Impossible de se désactiver soi-même"':'')+'>Désactiver</button>'
-        : '<button class="admin-sm-btn" onclick="toggleAdminUser(\''+u.id+'\',true)" style="font-size:10px;color:#4caf50">Réactiver</button>')
-      + (isSelf ? '' : '<button class="admin-sm-btn" onclick="deleteAdminUser(\''+u.id+'\',\''+u.email+'\')" style="font-size:10px;color:#ff4444">Supprimer</button>')
+          ? '<button class="admin-sm-btn" onclick="toggleAdminUser(\''+u.id+'\',false)" style="font-size:9.5px"'+(isSelf?' disabled title="Impossible"':'')+'>Désactiver</button>'
+          : '<button class="admin-sm-btn" onclick="toggleAdminUser(\''+u.id+'\',true)" style="font-size:9.5px;color:#4ade80">Réactiver</button>')
+      + (isSelf ? '' : '<button class="admin-sm-btn" onclick="deleteAdminUser(\''+u.id+'\',\''+u.nom+'\')" style="font-size:9.5px;color:#f87171">✕ Supprimer</button>')
       + '</div>'
       + '</div>';
   }).join('');
@@ -5047,48 +5189,115 @@ async function loadUtilisateurs() {
 
 function showAddUserModal() {
   if (!window._superAdmin) { showToast('Accès réservé au Super Admin', 'error'); return; }
-  var body = '<div class="admin-form-group"><label class="admin-label">Email *</label>'
-    + '<input class="admin-input" id="user-email" type="email" placeholder="admin@example.com"></div>'
-    + '<div class="admin-form-group"><label class="admin-label">Nom</label>'
-    + '<input class="admin-input" id="user-nom" placeholder="Prénom Nom"></div>'
+  var body =
+    '<div class="admin-form-group"><label class="admin-label">Email *</label>'
+    + '<input class="admin-input" id="u-email" type="email" placeholder="gerant@example.com"></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px">'
+    + '<div class="admin-form-group"><label class="admin-label">Prénom Nom *</label>'
+    + '<input class="admin-input" id="u-nom" placeholder="Ex : Jean Dupont"></div>'
+    + '<div class="admin-form-group"><label class="admin-label">Téléphone</label>'
+    + '<input class="admin-input" id="u-tel" placeholder="+229 XX XX XX XX"></div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
     + '<div class="admin-form-group"><label class="admin-label">Rôle</label>'
-    + '<select class="admin-select" id="user-role">'
-    + '<option value="admin">Admin</option>'
-    + '<option value="super_admin">Super Admin</option>'
-    + '</select></div>'
-    + '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,.04);border-radius:4px;font-size:12px;color:rgba(255,255,255,.4);line-height:1.6">'
-    + '⚠️ L\'administrateur sera ajouté dans la table <code>profils_admins</code>. '
-    + 'Créez également son compte dans <strong>Supabase Auth → Authentication → Users</strong> pour qu\'il puisse se connecter.'
-    + '</div>';
-  showAdminModal('Ajouter un administrateur', body, 'Ajouter', 'inviteUser()');
+    + '<select class="admin-select" id="u-role"><option value="admin">👤 Gérant</option><option value="super_admin">⭐ Super Admin</option></select></div>'
+    + '<div class="admin-form-group"><label class="admin-label">Notifications email</label>'
+    + '<select class="admin-select" id="u-notif"><option value="1">🔔 Activées</option><option value="0">🔕 Désactivées</option></select></div>'
+    + '</div>'
+    + '<div style="margin-top:12px;padding:10px 12px;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.2);border-radius:4px;font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.8">'
+    + '⚠️ Après ajout, créez le compte de connexion dans <strong style="color:#d4af37">Supabase Auth → Users → Invite user</strong> '
+    + 'avec le même email. Le gérant recevra un email pour définir son mot de passe.</div>';
+  showAdminModal('Ajouter un gérant', body, '+ Ajouter', 'doAddAdminUser()');
 }
 
-async function inviteUser() {
+async function doAddAdminUser() {
   if (!window._superAdmin) { showToast('Accès refusé', 'error'); return; }
-  var email = ((document.getElementById('user-email')||{}).value||'').trim();
-  var nom   = ((document.getElementById('user-nom')||{}).value||'').trim();
-  var role  = ((document.getElementById('user-role')||{}).value||'admin');
+  var email = ((document.getElementById('u-email')||{}).value||'').trim();
+  var nom   = ((document.getElementById('u-nom')||{}).value||'').trim();
+  var tel   = ((document.getElementById('u-tel')||{}).value||'').trim();
+  var role  = ((document.getElementById('u-role')||{}).value||'admin');
+  var notif = ((document.getElementById('u-notif')||{}).value||'1') === '1';
   if (!email) { showToast('Email requis', 'error'); return; }
-  var { error } = await sb.from('profils_admins').insert([{ email: email, nom: nom, role: role, actif: true }]);
-  if (error) { showToast('Erreur : ' + (error.message||'inconnue'), 'error'); return; }
-  showToast('Administrateur ajouté : ' + email, 'success');
+  if (!nom)   { showToast('Nom requis', 'error');   return; }
+  var { error } = await sb.from('profils_admins').insert([{
+    email:email, nom:nom, telephone:tel, role:role, notif_email:notif, actif:true
+  }]);
+  if (error) { showToast('Erreur : '+(error.message||'inconnue'), 'error'); return; }
+  showToast('Gérant ajouté : '+nom+' ('+email+')', 'success');
   closeAdminModal();
   loadUtilisateurs();
+  loadAdminEmailsFromDB();
+}
+
+// Alias pour compatibilité avec les boutons existants dans le HTML
+var inviteUser = doAddAdminUser;
+
+async function editAdminUser(id) {
+  if (!window._superAdmin) { showToast('Accès refusé', 'error'); return; }
+  var { data: u, error } = await sb.from('profils_admins').select('*').eq('id', id).single();
+  if (error || !u) { showToast('Impossible de charger ce gérant', 'error'); return; }
+  var body =
+    '<input type="hidden" id="eu-id" value="'+u.id+'">'
+    + '<div class="admin-form-group"><label class="admin-label">Email *</label>'
+    + '<input class="admin-input" id="eu-email" type="email" value="'+u.email+'"></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px">'
+    + '<div class="admin-form-group"><label class="admin-label">Prénom Nom</label>'
+    + '<input class="admin-input" id="eu-nom" value="'+(u.nom||'')+'"></div>'
+    + '<div class="admin-form-group"><label class="admin-label">Téléphone</label>'
+    + '<input class="admin-input" id="eu-tel" value="'+(u.telephone||'')+'" placeholder="+229 XX XX XX XX"></div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    + '<div class="admin-form-group"><label class="admin-label">Rôle</label>'
+    + '<select class="admin-select" id="eu-role">'
+    + '<option value="admin"'+(u.role==='admin'?' selected':'')+'>👤 Gérant</option>'
+    + '<option value="super_admin"'+(u.role==='super_admin'?' selected':'')+'>⭐ Super Admin</option>'
+    + '</select></div>'
+    + '<div class="admin-form-group"><label class="admin-label">Notifications email</label>'
+    + '<select class="admin-select" id="eu-notif">'
+    + '<option value="1"'+(u.notif_email!==false?' selected':'')+'>🔔 Activées</option>'
+    + '<option value="0"'+(u.notif_email===false?' selected':'')+'>🔕 Désactivées</option>'
+    + '</select></div>'
+    + '</div>'
+    + '<div style="margin-top:10px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:4px;font-size:11px;color:rgba(255,255,255,.3);line-height:1.7">'
+    + 'ℹ️ Modifier l\'email ici change les emails de notification, pas le compte de connexion Supabase Auth. '
+    + 'Pour changer le compte de connexion, modifiez-le aussi dans Supabase Auth.</div>';
+  showAdminModal('Modifier le gérant', body, '💾 Enregistrer', 'doSaveAdminUser()');
+}
+
+async function doSaveAdminUser() {
+  if (!window._superAdmin) { showToast('Accès refusé', 'error'); return; }
+  var id    = ((document.getElementById('eu-id')||{}).value||'').trim();
+  var email = ((document.getElementById('eu-email')||{}).value||'').trim();
+  var nom   = ((document.getElementById('eu-nom')||{}).value||'').trim();
+  var tel   = ((document.getElementById('eu-tel')||{}).value||'').trim();
+  var role  = ((document.getElementById('eu-role')||{}).value||'admin');
+  var notif = ((document.getElementById('eu-notif')||{}).value||'1') === '1';
+  if (!id || !email) { showToast('Données manquantes', 'error'); return; }
+  var { error } = await sb.from('profils_admins')
+    .update({ email:email, nom:nom, telephone:tel, role:role, notif_email:notif })
+    .eq('id', id);
+  if (error) { showToast('Erreur : '+(error.message||'inconnue'), 'error'); return; }
+  showToast('Gérant mis à jour : '+(nom||email), 'success');
+  closeAdminModal();
+  loadUtilisateurs();
+  loadAdminEmailsFromDB();
 }
 
 async function toggleAdminUser(id, actif) {
   if (!window._superAdmin) return;
   await sb.from('profils_admins').update({ actif: actif }).eq('id', id);
-  showToast(actif ? 'Compte réactivé' : 'Compte désactivé', 'success');
+  showToast(actif ? 'Gérant réactivé' : 'Gérant désactivé', 'success');
   loadUtilisateurs();
+  loadAdminEmailsFromDB();
 }
 
-async function deleteAdminUser(id, email) {
+async function deleteAdminUser(id, nom) {
   if (!window._superAdmin) return;
-  if (!confirm('Supprimer définitivement l\'administrateur ' + email + ' ?\n\nCela ne supprime pas son compte Supabase Auth.')) return;
+  if (!confirm('Supprimer définitivement le gérant « '+(nom||id)+' » ?\n\nSon compte Supabase Auth reste intact — supprimez-le manuellement dans Supabase si besoin.')) return;
   await sb.from('profils_admins').delete().eq('id', id);
-  showToast('Administrateur supprimé', 'success');
+  showToast('Gérant supprimé', 'success');
   loadUtilisateurs();
+  loadAdminEmailsFromDB();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -5697,6 +5906,167 @@ function safeSetPage(page) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════
+// HERO IMAGES — Dynamique depuis Supabase Storage
+// Table  : hero_images | Bucket : hero-images (public)
+// ═══════════════════════════════════════════════════════════
+var HERO_BUCKET = 'hero-images';
+
+async function initHeroImages() {
+  if (IS_SRCDOC) return;
+  try {
+    var { data } = await sb.from('hero_images')
+      .select('url, ordre').eq('actif', true)
+      .order('ordre', { ascending: true }).limit(6);
+    if (!data || !data.length) return; // garder les fallbacks CSS
+    var container = document.querySelector('.hero-slides');
+    if (!container) return;
+    // Supprimer les anciens slides (garder overlay et caption)
+    container.querySelectorAll('.hero-slide').forEach(function(s){ s.remove(); });
+    var n = data.length;
+    var total = n * 5; // 5s par slide
+    data.forEach(function(img, i) {
+      var s = document.createElement('div');
+      s.className = 'hero-slide';
+      s.style.backgroundImage  = 'url(' + img.url + ')';
+      s.style.animationDuration = total + 's';
+      s.style.animationDelay   = (i * 5) + 's';
+      container.insertBefore(s, container.firstChild);
+    });
+    // Recalculer les keyframes pour n slides
+    var pct = Math.floor(100 / n);
+    var tag = document.getElementById('_hero_kf') || document.createElement('style');
+    tag.id  = '_hero_kf';
+    tag.textContent = '@keyframes heroSlide{'
+      + '0%,' + Math.round(pct * 0.15) + '%{opacity:0}'
+      + Math.round(pct * 0.35) + '%,' + Math.round(pct * 0.75) + '%{opacity:1}'
+      + pct + '%,100%{opacity:0}}';
+    document.head.appendChild(tag);
+  } catch(e) {
+    console.warn('[Hero]', e.message);
+  }
+}
+
+async function loadHeroImages() {
+  var el = document.getElementById('hero-img-grid');
+  if (!el) return;
+  el.innerHTML = '<div style="color:rgba(255,255,255,.35);font-size:13px;padding:12px">Chargement…</div>';
+  try {
+    var { data, error } = await sb.from('hero_images')
+      .select('*').order('ordre', { ascending: true });
+    if (error && error.code === '42P01') {
+      el.innerHTML = '<div style="color:#ff9800;font-size:12.5px;padding:10px">'
+        + '⚠️ Table <code>hero_images</code> introuvable — suivez les instructions de configuration ci-dessous.</div>';
+      return;
+    }
+    if (!data || !data.length) {
+      el.innerHTML = '<div style="color:rgba(255,255,255,.35);font-size:13px;padding:12px">'
+        + 'Aucune image. Cliquez sur « Téléverser une image » pour ajouter la première photo.</div>';
+      return;
+    }
+    el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">'
+      + data.map(function(img) {
+          return '<div style="border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,'+(img.actif?'.15':'.06')+');background:rgba(255,255,255,.04)">'
+            + '<div style="height:120px;background:url('+img.url+') center/cover;position:relative">'
+            + '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,.55))">'
+            + '<div style="position:absolute;bottom:5px;left:7px;font-size:10px;color:#fff">N°'+(img.ordre+1)+'</div>'
+            + '<div style="position:absolute;top:5px;right:5px;display:flex;gap:3px">'
+            + '<button onclick="moveHeroImg(\''+img.id+'\','+(img.ordre-1)+')" style="background:rgba(0,0,0,.55);border:none;border-radius:3px;color:#fff;padding:2px 6px;font-size:11px;cursor:pointer" title="Monter">↑</button>'
+            + '<button onclick="moveHeroImg(\''+img.id+'\','+(img.ordre+1)+')" style="background:rgba(0,0,0,.55);border:none;border-radius:3px;color:#fff;padding:2px 6px;font-size:11px;cursor:pointer" title="Descendre">↓</button>'
+            + '</div></div></div>'
+            + '<div style="padding:7px 9px;display:flex;align-items:center;justify-content:space-between;gap:5px">'
+            + '<span style="font-size:11px;color:rgba(255,255,255,.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="'+(img.nom||'')+'">'+(img.nom||'Sans titre')+'</span>'
+            + '<div style="display:flex;gap:4px;flex-shrink:0">'
+            + '<button onclick="toggleHeroImg(\''+img.id+'\','+img.actif+')" class="admin-sm-btn" style="font-size:9px;padding:2px 6px">'+(img.actif?'Masquer':'Afficher')+'</button>'
+            + '<button onclick="deleteHeroImg(\''+img.id+'\',\''+encodeURIComponent(img.url)+'\')" class="admin-sm-btn" style="font-size:9px;padding:2px 6px;color:#f87171">✕</button>'
+            + '</div></div></div>';
+        }).join('')
+      + '</div>';
+  } catch(e) {
+    el.innerHTML = '<div style="color:#f87171;font-size:13px;padding:10px">Erreur : '+e.message+'</div>';
+  }
+}
+
+function showUploadHeroModal() {
+  var body = '<div class="admin-form-group"><label class="admin-label">Image *</label>'
+    + '<input type="file" id="hi-file" accept="image/jpeg,image/png,image/webp" class="admin-input" style="padding:8px">'
+    + '</div>'
+    + '<div class="admin-form-group" style="margin-top:10px"><label class="admin-label">Légende / titre (optionnel)</label>'
+    + '<input class="admin-input" id="hi-nom" placeholder="Ex : Salon appartement Premium">'
+    + '</div>'
+    + '<div id="hi-progress" style="display:none;margin-top:8px;font-size:12px;color:rgba(255,255,255,.5)">Téléversement…</div>';
+  showAdminModal('Ajouter une image au Hero', body, 'Téléverser', 'doUploadHeroImg()');
+}
+
+async function doUploadHeroImg() {
+  var file = (document.getElementById('hi-file')||{}).files;
+  file = file && file[0];
+  if (!file) { showToast('Sélectionnez un fichier image', 'error'); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast('Image trop lourde (max 5 Mo)', 'error'); return; }
+  var nom  = ((document.getElementById('hi-nom')||{}).value||'').trim() || file.name.replace(/\.[^.]+$/, '');
+  var prog = document.getElementById('hi-progress');
+  if (prog) prog.style.display = 'block';
+  try {
+    var { data: existing } = await sb.from('hero_images').select('id');
+    var ordre = existing ? existing.length : 0;
+    var ext   = file.name.split('.').pop().toLowerCase();
+    var path  = 'hero_' + Date.now() + '_' + Math.random().toString(36).slice(2,6) + '.' + ext;
+    var { error: upErr } = await sb.storage.from(HERO_BUCKET).upload(path, file, { cacheControl:'3600', upsert:false });
+    if (upErr) throw new Error('Upload : ' + upErr.message);
+    var { data: pubData } = sb.storage.from(HERO_BUCKET).getPublicUrl(path);
+    var { error: dbErr } = await sb.from('hero_images').insert([{ url:pubData.publicUrl, nom:nom, ordre:ordre, actif:true }]);
+    if (dbErr) throw new Error('DB : ' + dbErr.message);
+    showToast('Image ajoutée avec succès !', 'success');
+    closeAdminModal();
+    loadHeroImages();
+    initHeroImages();
+  } catch(e) {
+    showToast('Erreur : ' + e.message, 'error');
+    if (prog) prog.style.display = 'none';
+  }
+}
+
+async function deleteHeroImg(id, encodedUrl) {
+  if (!confirm('Supprimer cette image du carrousel ?')) return;
+  try {
+    var url  = decodeURIComponent(encodedUrl);
+    await sb.from('hero_images').delete().eq('id', id);
+    var path = url.split('/' + HERO_BUCKET + '/').pop();
+    if (path) await sb.storage.from(HERO_BUCKET).remove([path]);
+    showToast('Image supprimée', 'success');
+    loadHeroImages(); initHeroImages();
+  } catch(e) { showToast('Erreur : ' + e.message, 'error'); }
+}
+
+async function toggleHeroImg(id, actif) {
+  await sb.from('hero_images').update({ actif: !actif }).eq('id', id);
+  showToast(actif ? 'Image masquée du carrousel' : 'Image réactivée', 'success');
+  loadHeroImages(); initHeroImages();
+}
+
+async function moveHeroImg(id, newOrdre) {
+  if (newOrdre < 0) return;
+  await sb.from('hero_images').update({ ordre: newOrdre }).eq('id', id);
+  loadHeroImages();
+}
+
+// ═══════════════════════════════════════════════════════════
+// GÉRANTS — Chargement dynamique des emails depuis profils_admins
+// Plus de hardcode : ADMIN_EMAILS_JS est rempli au démarrage
+// ═══════════════════════════════════════════════════════════
+async function loadAdminEmailsFromDB() {
+  if (IS_SRCDOC) return;
+  try {
+    var { data } = await sb.from('profils_admins')
+      .select('email').eq('actif', true);
+    if (data && data.length) {
+      ADMIN_EMAILS_JS = data.map(function(u){ return u.email; }).join(',');
+    }
+  } catch(e) {
+    console.warn('[AdminEmails]', e.message);
+  }
+}
+
 (function initRoute() {
   var validPages = ['home','appartements','reservation','contact','admin'];
   var startPage = 'home';
@@ -5713,6 +6083,8 @@ function safeSetPage(page) {
   goTo(startPage);
   // Charger les paramètres du site dès le démarrage
   initSiteParametres();
+  // Charger les emails gérants dynamiquement (plus de hardcode)
+  loadAdminEmailsFromDB();
 })();
 
 // Bouton Retour/Avant du navigateur
@@ -5735,6 +6107,7 @@ window.addEventListener('popstate', function(e) {
   if(page==='home') {
     if(window._adminJustSaved) { cachedApts=null; window._adminJustSaved=false; }
     loadHomeApts();
+    initHeroImages();
   }
   if(page==='appartements') loadAllApts();
   if(page==='reservation')  loadResaPage();
