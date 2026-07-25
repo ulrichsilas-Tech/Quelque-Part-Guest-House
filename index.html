@@ -463,9 +463,10 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
   display:flex;align-items:center;justify-content:center;
   border-radius:7px;transition:border-color .2s,background .2s,transform .15s;
   text-decoration:none;flex-shrink:0}
-.footer-soc a svg{width:17px;height:17px;display:block;fill:rgba(255,255,255,.6);transition:fill .2s}
-.footer-soc a:hover{border-color:var(--gold);background:rgba(212,175,55,.1)}
-.footer-soc a:hover svg{fill:var(--gold)}
+.footer-soc a svg{width:17px;height:17px;display:block;transition:opacity .2s}
+.footer-soc a svg *{fill:rgba(255,255,255,.75)!important;stop-color:rgba(255,255,255,.75)!important}
+.footer-soc a:hover{border-color:var(--gold);background:rgba(212,175,55,.12)}
+.footer-soc a:hover svg *{fill:var(--gold)!important;stop-color:var(--gold)!important}
 .footer-col-title{font-size:10px;font-weight:600;letter-spacing:.18em;
   text-transform:uppercase;color:var(--gold);margin-bottom:14px}
 .footer-links{display:flex;flex-direction:column;gap:8px}
