@@ -1350,7 +1350,7 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
               <div class="gal-xs">📺</div>
             </div>
             <div style="margin-top:1.5rem">
-              <h1 id="det-nom" style="font-family:'Playfair Display',serif;font-size:26px;font-weight:600;color:var(--blue);margin-bottom:6px"></h1>
+              <h1 id="det-apt-nom" style="font-family:'Playfair Display',serif;font-size:26px;font-weight:600;color:var(--blue);margin-bottom:6px"></h1>
               <div id="det-loc" style="font-size:12px;color:var(--muted);margin-bottom:14px">📍</div>
               <div style="display:flex;gap:1.5rem;padding:14px 0;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);margin-bottom:1.2rem">
                 <span style="font-size:12.5px;color:var(--ink)" id="det-chambres"></span>
@@ -2111,8 +2111,24 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 );
 ALTER TABLE hero_images ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public read"  ON hero_images FOR SELECT USING (true);
-CREATE POLICY "Admin write"  ON hero_images FOR ALL   USING (auth.role() = 'authenticated');</code>
-              <strong>2. Storage</strong> → New Bucket → nommer <code>hero-images</code> → cocher <strong>Public bucket</strong> → Create.
+CREATE POLICY "Admin write"  ON hero_images FOR ALL   USING (auth.role() = 'authenticated');
+
+-- Politiques Storage pour le bucket hero-images
+INSERT INTO storage.buckets (id, name, public) VALUES ('hero-images', 'hero-images', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+CREATE POLICY "Hero images public read" ON storage.objects
+  FOR SELECT USING (bucket_id = 'hero-images');
+
+CREATE POLICY "Hero images admin upload" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'hero-images' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Hero images admin update" ON storage.objects
+  FOR UPDATE USING (bucket_id = 'hero-images' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Hero images admin delete" ON storage.objects
+  FOR DELETE USING (bucket_id = 'hero-images' AND auth.role() = 'authenticated');</code>
+              <strong>2. Storage</strong> → vérifier que le bucket <code>hero-images</code> est bien créé et défini comme <strong>Public</strong>.
             </div>
           </div>
         </div>
@@ -2819,7 +2835,7 @@ async function openAptDetail(aptId) {
   var detEl = document.getElementById('apt-detail-wrap');
   if(detEl) detEl.style.display='block';
 
-  document.getElementById('det-nom').textContent = apt.nom;
+  document.getElementById('det-apt-nom').textContent = apt.nom;
   document.getElementById('det-loc').textContent = '📍 '+(apt.adresse||apt.ville+', '+apt.pays);
   document.getElementById('det-chambres').textContent = '🛏 '+(apt.chambres||1)+' chambre'+(apt.chambres>1?'s':'');
   document.getElementById('det-sdb').textContent = '🚿 '+(apt.salles_bain||1)+' salle'+(apt.salles_bain>1?'s':'')+' de bain';
@@ -3720,29 +3736,50 @@ async function handleForgotPassword() {
   }
 }
 
-// ── Intercepteur : détecter le token de recovery dans l'URL au chargement ────
-// Supabase insère #access_token=...&type=recovery dans le lien de l'email
+// ── Intercepteur : token de recovery dans l'URL (lien email Supabase) ─────────
+// Supabase insère les tokens dans le hash : #access_token=...&type=recovery
+// ou parfois dans le path avec PKCE. On gère les deux cas.
 (function handlePasswordRecoveryFromURL() {
-  var hash = window.location.hash || '';
-  if (hash.indexOf('type=recovery') === -1) return;
+  var hash  = window.location.hash  || '';
+  var search = window.location.search || '';
+  var combined = hash + '&' + search;
+
+  if (combined.indexOf('type=recovery') === -1) return;
+
+  // Parser les paramètres du hash et/ou de la query string
   var params = {};
-  hash.replace(/^#/, '').split('&').forEach(function(p) {
-    var kv = p.split('=');
-    params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
-  });
+  function parseSegment(seg) {
+    seg.replace(/^[#?]/, '').split('&').forEach(function(p) {
+      if (!p) return;
+      var kv = p.split('=');
+      var k  = decodeURIComponent(kv[0]);
+      var v  = decodeURIComponent((kv[1]||'').replace(/\+/g,' '));
+      if (k) params[k] = v;
+    });
+  }
+  parseSegment(hash);
+  parseSegment(search);
+
   if (!params.access_token) return;
-  // Établir la session avec le token de recovery
-  // (Supabase v2 : onAuthStateChange avec SIGNED_IN après setSession)
-  sb.auth.setSession({ access_token: params.access_token, refresh_token: params.refresh_token || '' })
-    .then(function(r) {
-      if (!r.error) {
-        // Nettoyer le hash pour éviter une ré-exécution
-        history.replaceState(null, '', window.location.pathname + '#admin');
-        // Afficher la modale de changement de mot de passe
-        setTimeout(showResetPasswordModal, 400);
-      }
-    })
-    .catch(function(e) { console.warn('[Recovery]', e); });
+
+  // Nettoyer l'URL immédiatement (évite ré-exécution au F5)
+  history.replaceState(null, '', window.location.pathname + '#admin');
+
+  // Établir la session Supabase avec le token de recovery
+  sb.auth.setSession({
+    access_token:  params.access_token,
+    refresh_token: params.refresh_token || ''
+  }).then(function(r) {
+    if (r.error) {
+      showToast('Lien expiré ou invalide. Recommencez la procédure.', 'error');
+      return;
+    }
+    // Attendre que la page soit prête puis afficher la modale
+    setTimeout(showResetPasswordModal, 600);
+  }).catch(function(e) {
+    console.warn('[Recovery]', e);
+    showToast('Erreur lors de la récupération de session.', 'error');
+  });
 })();
 
 function showResetPasswordModal() {
@@ -6005,14 +6042,29 @@ async function doUploadHeroImg() {
   if (file.size > 5 * 1024 * 1024) { showToast('Image trop lourde (max 5 Mo)', 'error'); return; }
   var nom  = ((document.getElementById('hi-nom')||{}).value||'').trim() || file.name.replace(/\.[^.]+$/, '');
   var prog = document.getElementById('hi-progress');
-  if (prog) prog.style.display = 'block';
+  if (prog) { prog.style.display='block'; prog.style.color='rgba(255,255,255,.5)'; prog.textContent='Téléversement en cours…'; }
   try {
     var { data: existing } = await sb.from('hero_images').select('id');
     var ordre = existing ? existing.length : 0;
     var ext   = file.name.split('.').pop().toLowerCase();
     var path  = 'hero_' + Date.now() + '_' + Math.random().toString(36).slice(2,6) + '.' + ext;
     var { error: upErr } = await sb.storage.from(HERO_BUCKET).upload(path, file, { cacheControl:'3600', upsert:false });
-    if (upErr) throw new Error('Upload : ' + upErr.message);
+    if (upErr) {
+      // Message d'erreur spécifique RLS Storage
+      if (upErr.message && (upErr.message.indexOf('row-level security') !== -1 || upErr.message.indexOf('Unauthorized') !== -1 || upErr.statusCode === 403 || upErr.statusCode === '403')) {
+        var rlsMsg = '🔐 Erreur de permissions Storage (RLS).\n\n'
+          + 'Dans Supabase → Storage → Policies → bucket "hero-images",\n'
+          + 'ajoutez cette politique :\n\n'
+          + 'Pour INSERT : auth.role() = \'authenticated\'\n'
+          + 'Pour SELECT : true (lecture publique)\n\n'
+          + 'Ou exécutez le SQL affiché dans le panneau "Configuration Supabase".';
+        if (prog) { prog.style.color='#f87171'; prog.innerHTML='🔐 <strong>Erreur de permissions Storage.</strong> Consultez la configuration Supabase ci-dessous.'; }
+        showToast('Erreur RLS Storage — voir instructions configuration', 'error');
+        console.error('[Hero Upload RLS]', upErr);
+        return;
+      }
+      throw new Error('Upload : ' + upErr.message);
+    }
     var { data: pubData } = sb.storage.from(HERO_BUCKET).getPublicUrl(path);
     var { error: dbErr } = await sb.from('hero_images').insert([{ url:pubData.publicUrl, nom:nom, ordre:ordre, actif:true }]);
     if (dbErr) throw new Error('DB : ' + dbErr.message);
@@ -6022,7 +6074,7 @@ async function doUploadHeroImg() {
     initHeroImages();
   } catch(e) {
     showToast('Erreur : ' + e.message, 'error');
-    if (prog) prog.style.display = 'none';
+    if (prog) { prog.style.color='#f87171'; prog.textContent='Erreur : ' + e.message; }
   }
 }
 
