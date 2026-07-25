@@ -344,11 +344,13 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 .contact-label{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;
   color:var(--muted);font-weight:500;margin-bottom:2px}
 .contact-value{font-size:13.5px;color:var(--ink)}
-.social-row{display:flex;gap:7px;margin-top:6px}
-.social-btn{width:32px;height:32px;border:0.5px solid var(--border);border-radius:3px;
-  display:flex;align-items:center;justify-content:center;font-size:12px;
-  font-weight:600;color:var(--muted);transition:all .2s;cursor:pointer}
-.social-btn:hover{border-color:var(--blue);color:var(--blue)}
+.social-row{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.social-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .15s;
+  background:var(--white);flex-shrink:0;text-decoration:none}
+.social-btn:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(27,46,122,.12);transform:translateY(-1px)}
+.social-btn svg{width:18px;height:18px;display:block}
 .wa-btn{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;
   border:none;padding:10px 18px;font-size:12.5px;font-weight:500;border-radius:3px;
   margin-top:12px;transition:background .2s;cursor:pointer}
@@ -456,11 +458,14 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
 .footer-logo-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:#fff;margin-bottom:2px}
 .footer-logo-sub{font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.35)}
 .footer-desc{font-size:12.5px;color:rgba(255,255,255,.45);line-height:1.75;margin-top:10px;max-width:260px}
-.footer-soc{display:flex;gap:7px;margin-top:14px}
-.footer-soc a{width:30px;height:30px;border:0.5px solid rgba(255,255,255,.2);
-  display:flex;align-items:center;justify-content:center;font-size:11px;
-  font-weight:600;color:rgba(255,255,255,.45);border-radius:2px;transition:all .2s}
-.footer-soc a:hover{border-color:var(--gold);color:var(--gold)}
+.footer-soc{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.footer-soc a{width:32px;height:32px;border:1px solid rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;
+  border-radius:7px;transition:border-color .2s,background .2s,transform .15s;
+  text-decoration:none;flex-shrink:0}
+.footer-soc a svg{width:17px;height:17px;display:block;fill:rgba(255,255,255,.6);transition:fill .2s}
+.footer-soc a:hover{border-color:var(--gold);background:rgba(212,175,55,.1)}
+.footer-soc a:hover svg{fill:var(--gold)}
 .footer-col-title{font-size:10px;font-weight:600;letter-spacing:.18em;
   text-transform:uppercase;color:var(--gold);margin-bottom:14px}
 .footer-links{display:flex;flex-direction:column;gap:8px}
@@ -1485,10 +1490,8 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
               <div><div class="contact-label">E-mail</div><div class="contact-value" id="contact-email-display">contact@aaz-consulting.bj</div></div>
             </div>
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:500;margin-bottom:9px">Réseaux sociaux</div>
-            <div class="social-row">
-              <div class="social-btn" onclick="window.open('#','_blank')">f</div>
-              <div class="social-btn" onclick="window.open('#','_blank')">in</div>
-              <div class="social-btn" onclick="window.open('#','_blank')">ig</div>
+            <div class="social-row" id="contact-soc-dynamic">
+              <!-- Rendu dynamique par renderSocialLinks() -->
             </div>
             <button class="wa-btn" onclick="window.open('https://wa.me/'+WHATSAPP_NUMBER,'_blank')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style="flex-shrink:0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.169-.01-.371-.012-.57-.012-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Écrire sur WhatsApp</button>
           </div>
@@ -2210,18 +2213,17 @@ CREATE POLICY "Hero images admin delete" ON storage.objects
               <div id="pay-methods-feedback" style="font-size:12px;color:#4caf50;margin-top:8px;display:none"></div>
             </div>
             <div class="admin-card" style="padding:16px">
-              <div class="admin-card-title" style="margin-bottom:12px">Réseaux sociaux</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div class="admin-form-group"><label class="admin-label">Facebook</label>
-                  <input class="admin-input" id="param-fb" placeholder="https://facebook.com/..."></div>
-                <div class="admin-form-group"><label class="admin-label">Instagram</label>
-                  <input class="admin-input" id="param-ig" placeholder="https://instagram.com/..."></div>
-                <div class="admin-form-group"><label class="admin-label">LinkedIn</label>
-                  <input class="admin-input" id="param-li" placeholder="https://linkedin.com/..."></div>
-                <div class="admin-form-group"><label class="admin-label">TikTok</label>
-                  <input class="admin-input" id="param-tt" placeholder="https://tiktok.com/..."></div>
+              <div class="admin-card-title" style="margin-bottom:4px">Réseaux sociaux</div>
+              <div style="font-size:11.5px;color:rgba(255,255,255,.4);margin-bottom:12px;line-height:1.7">
+                Ajoutez un lien et le logo officiel est automatiquement détecté.<br>
+                Réseaux supportés : Facebook, TikTok, Instagram, X/Twitter, YouTube, LinkedIn, WhatsApp.
               </div>
-              <button class="admin-sm-btn" onclick="saveParametres()">💾 Sauvegarder</button>
+              <div id="social-links-admin"></div>
+              <button class="admin-sm-btn" onclick="addSocialLinkRow()" style="margin-top:8px">+ Ajouter un réseau</button>
+              <div style="margin-top:12px">
+                <button class="admin-sm-btn" onclick="saveSocialLinks()">💾 Sauvegarder</button>
+                <div id="social-save-fb" style="font-size:11px;color:#4ade80;margin-top:6px;display:none">✅ Réseaux sociaux sauvegardés</div>
+              </div>
             </div>
             <div class="admin-card" style="padding:16px;border-left:3px solid #F5A623">
               <div class="admin-card-title" style="margin-bottom:8px;color:#FCD34D">🔧 Configuration Supabase RLS</div>
@@ -2256,10 +2258,8 @@ CREATE POLICY "Hero images admin delete" ON storage.objects
       <div class="footer-logo-name">Quelque Part Guest House</div>
       <div class="footer-logo-sub">AAZ Consulting · Construire-Organiser-Gérer</div>
       <div class="footer-desc">Des appartements meublés haut de gamme à Cotonou, Bénin. Réservez en ligne, payez en toute sécurité.</div>
-      <div class="footer-soc">
-        <a href="#" id="footer-fb-link" target="_blank" rel="noopener" title="Facebook">f</a>
-        <a href="#" id="footer-li-link" target="_blank" rel="noopener" title="LinkedIn">in</a>
-        <a href="#" id="footer-ig-link" target="_blank" rel="noopener" title="Instagram">ig</a>
+      <div class="footer-soc" id="footer-soc-dynamic">
+        <!-- Rendu dynamique par renderSocialLinks() -->
       </div>
     </div>
     <div>
@@ -3664,6 +3664,30 @@ function adminNav(linkEl, sectionId) {
 // ═══════════════════════════════════════════════════════════
 async function checkAdminSession() {
   if (IS_SRCDOC) { showSrcdocNotice(); return; }
+
+  // ── Cas spécial : lien de réinitialisation de mot de passe ──────────────────
+  if (window._pendingPasswordReset) {
+    var tokens = window._pendingPasswordReset;
+    window._pendingPasswordReset = null;
+
+    // Afficher le formulaire login en fond (état déconnecté)
+    document.getElementById('admin-login-view').style.display    = 'flex';
+    document.getElementById('admin-dashboard-view').style.display = 'none';
+
+    // Établir la session Supabase avec le token de recovery
+    var r = await sb.auth.setSession({
+      access_token:  tokens.access_token,
+      refresh_token: tokens.refresh_token
+    });
+    if (r.error) {
+      showToast('Lien expiré ou invalide. Recommencez la procédure de réinitialisation.', 'error');
+      return;
+    }
+    // Session établie → afficher la modale de nouveau mot de passe
+    showResetPasswordModal();
+    return;
+  }
+  // ── Vérification session normale ─────────────────────────────────────────────
   var r = await sb.auth.getSession();
   if (r.data && r.data.session) {
     showAdminDashboard(r.data.session.user);
@@ -3738,15 +3762,14 @@ async function handleForgotPassword() {
 
 // ── Intercepteur : token de recovery dans l'URL (lien email Supabase) ─────────
 // Supabase insère les tokens dans le hash : #access_token=...&type=recovery
-// ou parfois dans le path avec PKCE. On gère les deux cas.
 (function handlePasswordRecoveryFromURL() {
-  var hash  = window.location.hash  || '';
-  var search = window.location.search || '';
+  var hash     = window.location.hash   || '';
+  var search   = window.location.search || '';
   var combined = hash + '&' + search;
 
   if (combined.indexOf('type=recovery') === -1) return;
 
-  // Parser les paramètres du hash et/ou de la query string
+  // Parser les paramètres du hash ET de la query string
   var params = {};
   function parseSegment(seg) {
     seg.replace(/^[#?]/, '').split('&').forEach(function(p) {
@@ -3762,24 +3785,14 @@ async function handleForgotPassword() {
 
   if (!params.access_token) return;
 
-  // Nettoyer l'URL immédiatement (évite ré-exécution au F5)
+  // Remplacer le hash par #admin AVANT initRoute, pour que goTo('admin') s'ouvre
   history.replaceState(null, '', window.location.pathname + '#admin');
 
-  // Établir la session Supabase avec le token de recovery
-  sb.auth.setSession({
+  // Flag global : bloque checkAdminSession et déclenche la modale à la place
+  window._pendingPasswordReset = {
     access_token:  params.access_token,
     refresh_token: params.refresh_token || ''
-  }).then(function(r) {
-    if (r.error) {
-      showToast('Lien expiré ou invalide. Recommencez la procédure.', 'error');
-      return;
-    }
-    // Attendre que la page soit prête puis afficher la modale
-    setTimeout(showResetPasswordModal, 600);
-  }).catch(function(e) {
-    console.warn('[Recovery]', e);
-    showToast('Erreur lors de la récupération de session.', 'error');
-  });
+  };
 })();
 
 function showResetPasswordModal() {
@@ -5363,19 +5376,33 @@ async function loadParametres() {
   }
   renderPaymentMethodsConfig();
 
-  // Pré-remplir les champs admin
+  // Pré-remplir les champs admin (hors réseaux sociaux désormais gérés séparément)
   var fields = {
     'param-nom':          'site_nom',
     'param-email-notif':  'email_notif',
-    'param-fb':           'social_fb',
-    'param-ig':           'social_ig',
-    'param-li':           'social_li',
-    'param-tt':           'social_tt',
   };
   Object.keys(fields).forEach(function(fieldId) {
     var el = document.getElementById(fieldId);
     if (el && map[fields[fieldId]]) el.value = map[fields[fieldId]];
   });
+
+  // Charger les réseaux sociaux dans l'admin
+  var socialLinks = DEFAULT_SOCIAL_LINKS;
+  if (map['social_links']) {
+    try {
+      var parsed = JSON.parse(map['social_links']);
+      if (Array.isArray(parsed)) socialLinks = parsed;
+    } catch(e) {}
+  } else {
+    // Compatibilité ancien format
+    socialLinks = [];
+    if (map['social_fb']) socialLinks.push(map['social_fb']);
+    if (map['social_tt']) socialLinks.push(map['social_tt']);
+    if (map['social_ig']) socialLinks.push(map['social_ig']);
+    if (map['social_li']) socialLinks.push(map['social_li']);
+    if (!socialLinks.length) socialLinks = DEFAULT_SOCIAL_LINKS;
+  }
+  renderSocialLinksAdmin(socialLinks);
 
   // Pré-remplir section contenu
   var contFields = {
@@ -5423,18 +5450,30 @@ function applyParametresSite(map) {
   if (map['contact_wa']) {
     window.WHATSAPP_NUMBER = map['contact_wa'];
   }
-  // Réseaux sociaux footer
-  var socialMap = {
-    'social_fb': 'footer-fb-link',
-    'social_li': 'footer-li-link',
-    'social_ig': 'footer-ig-link',
-  };
-  Object.keys(socialMap).forEach(function(key) {
-    if (map[key]) {
-      var el = document.getElementById(socialMap[key]);
-      if (el) el.href = map[key];
+  // Réseaux sociaux footer + contact (dynamique)
+  var socialLinks = DEFAULT_SOCIAL_LINKS; // fallback
+  if (map['social_links']) {
+    try {
+      var parsed = JSON.parse(map['social_links']);
+      if (Array.isArray(parsed) && parsed.length) socialLinks = parsed;
+    } catch(e) {
+      // Compatibilité ancien format : social_fb / social_tt
+      socialLinks = [];
+      if (map['social_fb']) socialLinks.push(map['social_fb']);
+      if (map['social_tt']) socialLinks.push(map['social_tt']);
+      if (map['social_ig']) socialLinks.push(map['social_ig']);
+      if (map['social_li']) socialLinks.push(map['social_li']);
+      if (!socialLinks.length) socialLinks = DEFAULT_SOCIAL_LINKS;
     }
-  });
+  } else if (map['social_fb'] || map['social_tt']) {
+    // Compatibilité ancien format
+    socialLinks = [];
+    if (map['social_fb']) socialLinks.push(map['social_fb']);
+    if (map['social_tt']) socialLinks.push(map['social_tt']);
+    if (map['social_ig']) socialLinks.push(map['social_ig']);
+    if (map['social_li']) socialLinks.push(map['social_li']);
+  }
+  renderSocialLinks(socialLinks);
 }
 
 // Sauvegarde les paramètres dans Supabase (upsert clé-valeur)
@@ -5480,17 +5519,11 @@ async function savePaymentMethods() {
 
 async function saveParametres() {
   var fields = {
-    'site_nom':       (document.getElementById('param-nom')         || {}).value || '',
-    'email_notif':    (document.getElementById('param-email-notif') || {}).value || '',
-    'social_fb':      (document.getElementById('param-fb')          || {}).value || '',
-    'social_ig':      (document.getElementById('param-ig')          || {}).value || '',
-    'social_li':      (document.getElementById('param-li')          || {}).value || '',
-    'social_tt':      (document.getElementById('param-tt')          || {}).value || '',
+    'site_nom':    (document.getElementById('param-nom')         || {}).value || '',
+    'email_notif': (document.getElementById('param-email-notif') || {}).value || '',
   };
-  var rows = Object.keys(fields).map(function(cle) {
-    return { cle: cle, valeur: fields[cle] };
-  });
-  var r = await sb.from('parametres').upsert(rows, { onConflict: 'cle' });
+  var rows = Object.keys(fields).map(function(cle) { return { cle:cle, valeur:fields[cle] }; });
+  var r = await sb.from('parametres').upsert(rows, { onConflict:'cle' });
   if (r.error) {
     console.error('saveParametres:', errMsg(r.error));
     if (r.error.code === '42501' || (r.error.message && r.error.message.indexOf('row-level security') >= 0)) {
@@ -5925,6 +5958,8 @@ function closeAdminModal() {
 // ── Chargement des paramètres du site au démarrage ───────────────────────────
 async function initSiteParametres() {
   if (IS_SRCDOC) { showSrcdocNotice(); return; }
+  // Afficher les réseaux par défaut immédiatement (sera écrasé si des valeurs existent en base)
+  renderSocialLinks(DEFAULT_SOCIAL_LINKS);
   try {
     var { data, error } = await sb.from('parametres').select('cle, valeur');
     if (error || !data) return;
@@ -5944,7 +5979,104 @@ function safeSetPage(page) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// HERO IMAGES — Dynamique depuis Supabase Storage
+// RÉSEAUX SOCIAUX — Logos officiels SVG + détection automatique
+// ═══════════════════════════════════════════════════════════
+var SOCIAL_NETWORKS = [
+  {
+    id: 'facebook', label: 'Facebook', color: '#1877F2',
+    match: ['facebook.com', 'fb.com', 'fb.me'],
+    svg: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#1877F2" d="M24 12.073C24 5.404 18.627 0 12 0S0 5.404 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.887v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>'
+  },
+  {
+    id: 'tiktok', label: 'TikTok', color: '#000000',
+    match: ['tiktok.com', 'vm.tiktok.com'],
+    svg: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.08a8.18 8.18 0 004.78 1.52V7.15a4.85 4.85 0 01-1.01-.46z"/></svg>'
+  },
+  {
+    id: 'instagram', label: 'Instagram', color: '#E1306C',
+    match: ['instagram.com', 'instagr.am'],
+    svg: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#F58529"/><stop offset="50%" style="stop-color:#DD2A7B"/><stop offset="100%" style="stop-color:#8134AF"/></linearGradient></defs><path fill="url(#ig-grad)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>'
+  },
+  {
+    id: 'twitter', label: 'X / Twitter', color: '#000000',
+    match: ['twitter.com', 'x.com', 't.co'],
+    svg: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>'
+  },
+  {
+    id: 'youtube', label: 'YouTube', color: '#FF0000',
+    match: ['youtube.com', 'youtu.be'],
+    svg: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#FF0000" d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+  },
+  {
+    id: 'linkedin', label: 'LinkedIn', color: '#0A66C2',
+    match: ['linkedin.com'],
+    svg: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#0A66C2" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>'
+  },
+  {
+    id: 'whatsapp', label: 'WhatsApp', color: '#25D366',
+    match: ['wa.me', 'whatsapp.com', 'api.whatsapp.com'],
+    svg: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#25D366" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.169-.01-.371-.012-.57-.012-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
+  },
+];
+
+// Détecter le réseau social depuis une URL
+function detectSocialNetwork(url) {
+  if (!url) return null;
+  var u = url.toLowerCase();
+  for (var i = 0; i < SOCIAL_NETWORKS.length; i++) {
+    var net = SOCIAL_NETWORKS[i];
+    for (var j = 0; j < net.match.length; j++) {
+      if (u.indexOf(net.match[j]) !== -1) return net;
+    }
+  }
+  // Réseau inconnu : icône générique
+  return { id:'other', label:'Lien', color:'#6B7280',
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>'
+  };
+}
+
+// Construire un bouton réseau social avec le vrai logo
+function buildSocialBtn(url, forFooter) {
+  if (!url || url === '#') return '';
+  var net = detectSocialNetwork(url);
+  if (!net) return '';
+  if (forFooter) {
+    return '<a href="'+url+'" target="_blank" rel="noopener" title="'+net.label+'" aria-label="'+net.label+'">'
+      + net.svg + '</a>';
+  }
+  return '<a href="'+url+'" target="_blank" rel="noopener" class="social-btn" title="'+net.label+'" aria-label="'+net.label+'">'
+    + net.svg + '</a>';
+}
+
+// Rendre les réseaux sociaux dynamiquement dans les conteneurs dédiés
+function renderSocialLinks(links) {
+  // links = [{url:'...'},...] ou tableau d'URLs
+  var urls = Array.isArray(links) ? links.map(function(l){ return typeof l === 'string' ? l : l.url; }) : [];
+  urls = urls.filter(function(u){ return u && u.trim() && u !== '#'; });
+
+  // Footer
+  var footerSoc = document.getElementById('footer-soc-dynamic');
+  if (footerSoc) {
+    footerSoc.innerHTML = urls.length
+      ? urls.map(function(u){ return buildSocialBtn(u, true); }).join('')
+      : '';
+  }
+  // Page Contact
+  var contactSoc = document.getElementById('contact-soc-dynamic');
+  if (contactSoc) {
+    contactSoc.innerHTML = urls.length
+      ? urls.map(function(u){ return buildSocialBtn(u, false); }).join('')
+      : '<span style="font-size:12px;color:var(--muted)">Aucun réseau configuré</span>';
+  }
+}
+
+// Valeur par défaut : Facebook + TikTok
+var DEFAULT_SOCIAL_LINKS = [
+  'https://www.facebook.com/quelquepartguesthouse',
+  'https://www.tiktok.com/@quelquepartguesthouse'
+];
+
+
 // Table  : hero_images | Bucket : hero-images (public)
 // ═══════════════════════════════════════════════════════════
 var HERO_BUCKET = 'hero-images';
@@ -5982,6 +6114,73 @@ async function initHeroImages() {
   } catch(e) {
     console.warn('[Hero]', e.message);
   }
+}
+
+// ─── Admin : gestion dynamique des réseaux sociaux ─────────
+function renderSocialLinksAdmin(links) {
+  var el = document.getElementById('social-links-admin');
+  if (!el) return;
+  if (!links || !links.length) links = [];
+  el.innerHTML = links.length === 0
+    ? '<div style="font-size:12px;color:rgba(255,255,255,.3);padding:6px 0">Aucun réseau ajouté.</div>'
+    : links.map(function(url, i) {
+        var net = url ? detectSocialNetwork(url) : null;
+        var logoHtml = net
+          ? '<div style="width:28px;height:28px;border-radius:5px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="display:block;width:18px;height:18px">'+net.svg+'</span></div>'
+          : '<div style="width:28px;height:28px;border-radius:5px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px">🔗</div>';
+        var netLabel = net ? '<span style="font-size:10.5px;color:rgba(255,255,255,.4);white-space:nowrap;min-width:52px">'+net.label+'</span>' : '<span style="font-size:10.5px;color:rgba(255,255,255,.25);min-width:52px">Inconnu</span>';
+        return '<div class="social-link-row" data-idx="'+i+'" style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+          + '<div id="soc-logo-'+i+'" style="display:flex;align-items:center">'+logoHtml+'</div>'
+          + '<input class="admin-input" style="flex:1;margin:0;font-size:12.5px" id="soc-url-'+i+'" value="'+url+'" '
+          + 'placeholder="https://facebook.com/votrepage" oninput="onSocialUrlChange('+i+',this.value)">'
+          + netLabel
+          + '<button onclick="removeSocialLinkRow('+i+')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:15px;padding:0 3px;line-height:1" title="Supprimer">✕</button>'
+          + '</div>';
+      }).join('');
+}
+
+function onSocialUrlChange(idx, url) {
+  var logoEl = document.getElementById('soc-logo-'+idx);
+  if (!logoEl) return;
+  var net = url ? detectSocialNetwork(url) : null;
+  logoEl.innerHTML = net
+    ? '<div style="width:28px;height:28px;border-radius:5px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="display:block;width:18px;height:18px">'+net.svg+'</span></div>'
+    : '<div style="width:28px;height:28px;border-radius:5px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px">🔗</div>';
+}
+
+function getSocialLinksFromAdmin() {
+  var rows = document.querySelectorAll('#social-links-admin .social-link-row');
+  var links = [];
+  rows.forEach(function(row) {
+    var idx = row.getAttribute('data-idx');
+    var inp = document.getElementById('soc-url-'+idx);
+    if (inp && inp.value.trim()) links.push(inp.value.trim());
+  });
+  return links;
+}
+
+function addSocialLinkRow() {
+  var current = getSocialLinksFromAdmin();
+  current.push('');
+  renderSocialLinksAdmin(current);
+  var newIdx = current.length - 1;
+  setTimeout(function(){ var el=document.getElementById('soc-url-'+newIdx); if(el) el.focus(); }, 50);
+}
+
+function removeSocialLinkRow(idx) {
+  var current = getSocialLinksFromAdmin();
+  current.splice(idx, 1);
+  renderSocialLinksAdmin(current);
+}
+
+async function saveSocialLinks() {
+  var links = getSocialLinksFromAdmin();
+  var r = await sb.from('parametres').upsert([{ cle:'social_links', valeur:JSON.stringify(links) }], { onConflict:'cle' });
+  if (r.error) { showToast('Erreur : '+r.error.message, 'error'); return; }
+  var fb = document.getElementById('social-save-fb');
+  if (fb) { fb.style.display='block'; setTimeout(function(){ if(fb) fb.style.display='none'; }, 3000); }
+  showToast('Réseaux sociaux sauvegardés ✅', 'success');
+  renderSocialLinks(links);
 }
 
 async function loadHeroImages() {
