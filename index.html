@@ -2202,12 +2202,52 @@ CREATE POLICY "Hero images admin delete" ON storage.objects
               <button class="admin-sm-btn" onclick="saveParametres()">💾 Sauvegarder les paramètres</button>
             </div>
 
+            <!-- ── Fonnte (WhatsApp) ── -->
+            <div class="admin-card" style="padding:16px;border-left:3px solid #25D366">
+              <div class="admin-card-title" style="margin-bottom:4px">📱 Fonnte — Notifications WhatsApp</div>
+              <p style="font-size:11.5px;color:rgba(255,255,255,.4);margin:0 0 12px;line-height:1.7">
+                Obtenez votre token sur <a href="https://fonnte.com" target="_blank" style="color:#25D366">fonnte.com</a>
+                → Mon compte → Token API.<br>
+                Ce token permet l'envoi automatique de messages WhatsApp aux clients et aux gérants.
+              </p>
+              <div class="admin-form-group">
+                <label class="admin-label">Token Fonnte *</label>
+                <input class="admin-input" id="param-fonnte-token" placeholder="Votre token Fonnte" type="password" autocomplete="off">
+              </div>
+              <div class="admin-form-group" style="margin-top:10px">
+                <label class="admin-label">Numéro WhatsApp principal (format: 22961234567)</label>
+                <input class="admin-input" id="param-wa-number" placeholder="22900000000">
+              </div>
+              <button class="admin-sm-btn" onclick="saveFonnteConfig()" style="margin-top:10px">💾 Sauvegarder</button>
+              <div id="fonnte-feedback" style="font-size:11px;color:#4ade80;margin-top:6px;display:none">✅ Configuration Fonnte sauvegardée</div>
+            </div>
+
+            <!-- ── FeexPay ── -->
+            <div class="admin-card" style="padding:16px;border-left:3px solid #d4af37">
+              <div class="admin-card-title" style="margin-bottom:4px">💳 FeexPay — Paiement en ligne</div>
+              <p style="font-size:11.5px;color:rgba(255,255,255,.4);margin:0 0 12px;line-height:1.7">
+                Obtenez votre token sur <a href="https://feexpay.me" target="_blank" style="color:#d4af37">feexpay.me</a>
+                → Dashboard → API Keys.<br>
+                Ce token active le paiement en ligne par Mobile Money et carte bancaire.
+              </p>
+              <div class="admin-form-group">
+                <label class="admin-label">Token FeexPay *</label>
+                <input class="admin-input" id="param-feexpay-token" placeholder="Votre token FeexPay" type="password" autocomplete="off">
+              </div>
+              <div class="admin-form-group" style="margin-top:10px">
+                <label class="admin-label">URL du site en production</label>
+                <input class="admin-input" id="param-site-url" placeholder="https://votresite.vercel.app">
+              </div>
+              <button class="admin-sm-btn" onclick="saveFeexPayConfig()" style="margin-top:10px">💾 Sauvegarder</button>
+              <div id="feexpay-config-feedback" style="font-size:11px;color:#4ade80;margin-top:6px;display:none">✅ Configuration FeexPay sauvegardée</div>
+            </div>
+
             <!-- ── Moyens de paiement ── -->
             <div class="admin-card" style="padding:16px">
               <div class="admin-card-title" style="margin-bottom:6px">💳 Moyens de paiement</div>
               <p style="font-size:12px;color:rgba(255,255,255,.4);margin:0 0 14px;line-height:1.6">
                 Activez ou désactivez les moyens de paiement proposés aux clients lors de la réservation.
-                Feexpay sera disponible après intégration finale.
+                FeexPay est désormais intégré — assurez-vous d'avoir configuré votre token ci-dessus.
               </p>
               <div id="pay-methods-config"></div>
               <button class="admin-sm-btn" onclick="savePaymentMethods()" style="margin-top:10px">💾 Sauvegarder</button>
@@ -2304,6 +2344,21 @@ var SITE_URL = 'https://quelquepart.vercel.app';
 // Numéro WhatsApp (format international sans +)
 var WHATSAPP_NUMBER = '22900000000';
 
+// ── Fonnte — API WhatsApp ─────────────────────────────────────────────────────
+// Obtenez votre token sur https://fonnte.com → Settings → Token
+// ⚠️ À renseigner avec votre vrai token Fonnte
+var FONNTE_TOKEN = ''; // Ex: 'abcdef123456'
+var FONNTE_API   = 'https://api.fonnte.com/send';
+
+// ── FeexPay — Agrégateur de paiement ──────────────────────────────────────────
+// Obtenez vos clés sur https://feexpay.me → Dashboard → API
+// ⚠️ À renseigner avec votre vrai token FeexPay
+var FEEXPAY_TOKEN   = ''; // Ex: 'your_feexpay_api_token'
+var FEEXPAY_API     = 'https://api.feexpay.me/api/orders/online/create/';
+// URL de callback après paiement (doit être accessible publiquement)
+var FEEXPAY_CALLBACK_URL = SITE_URL + '/payment-callback';
+var FEEXPAY_RETURN_URL   = SITE_URL + '/#reservation';
+
 // ── Emails transactionnels — Backend Resend via Supabase Edge Functions ───────
 var EDGE_FUNCTION_URL = 'https://utyimnjxgfeevdhrmgyc.supabase.co/functions/v1/send-email';
 // Emails gérants : plus codés en dur — chargés dynamiquement depuis profils_admins
@@ -2313,12 +2368,11 @@ var ADMIN_EMAILS_JS   = ''; // Rempli au démarrage par loadAdminEmailsFromDB()
 var SUPER_ADMIN_EMAIL = 'superadmin@votredomaine.com';
 
 // ── Méthodes de paiement actives (modifiable depuis Admin → Paramètres) ───────
-// Ces valeurs sont écrasées au chargement si des paramètres Supabase existent
 var METHODES_PAIEMENT = [
   { id: 'mtn',     label: 'MTN MoMo',    icon: '📱', actif: true  },
   { id: 'moov',    label: 'Moov Money',  icon: '📱', actif: true  },
   { id: 'wave',    label: 'Wave',        icon: '📱', actif: false },
-  { id: 'feexpay', label: 'Feexpay',     icon: '💳', actif: false },
+  { id: 'feexpay', label: 'FeexPay',     icon: '💳', actif: true  },
   { id: 'carte',   label: 'Carte',       icon: '💳', actif: false },
 ];
 // ─────────────────────────────────────────────────────────
@@ -3315,6 +3369,47 @@ async function submitResa(prefix, aptId) {
   var montant = n * Number(apt.prix_nuit);
   var ref = genRef();
 
+  // Si paiement FeexPay : créer la réservation en "en_attente" puis lancer le paiement
+  if (methode === 'feexpay') {
+    var { data: resaFeex, error: feexErr } = await sb.from('reservations').insert([{
+      reference:        ref,
+      appartement_id:   aptId,
+      client_nom:       nom,
+      client_tel:       tel,
+      client_email:     email,
+      date_arrivee:     arr,
+      date_depart:      dep,
+      prix_nuit:        apt.prix_nuit,
+      montant_total:    montant,
+      methode_paiement: 'feexpay',
+      statut:           'en_attente',
+      statut_paiement:  'en_attente',
+      acompte:          0
+    }]).select().single();
+
+    if (feexErr) {
+      showToast('Erreur lors de la réservation. Veuillez réessayer.', 'error');
+      if(btn){btn.disabled=false;btn.innerHTML='Confirmer et payer →';}
+      return;
+    }
+    if(btn){btn.disabled=false;btn.innerHTML='Confirmer et payer →';}
+    // Lancer le paiement FeexPay
+    await initiateFeexPayment({
+      id:            resaFeex.id,
+      reference:     ref,
+      client_nom:    nom,
+      client_tel:    tel,
+      client_email:  email,
+      date_arrivee:  arr,
+      date_depart:   dep,
+      montant_total: montant,
+      methode_paiement: 'feexpay',
+      apt_nom:       apt.nom
+    }, apt);
+    return;
+  }
+
+  // Paiement mobile (MTN, Moov, Wave) ou acompte manuel
   var { data, error } = await sb.from('reservations').insert([{
     reference:        ref,
     appartement_id:   aptId,
@@ -3337,8 +3432,17 @@ async function submitResa(prefix, aptId) {
     return;
   }
 
-  // Les emails + WhatsApp sont déclenchés automatiquement
-  // via le Database Webhook → Edge Function send-email.
+  // ── Notifications WhatsApp via Fonnte (non bloquant) ──
+  notifyResaWhatsApp({
+    reference:      ref,
+    client_nom:     nom,
+    client_tel:     tel,
+    client_email:   email,
+    date_arrivee:   arr,
+    date_depart:    dep,
+    montant_total:  montant,
+    methode_paiement: methode
+  }, apt.nom);
 
   // Afficher succès
   var successHTML = '<div class="book-success show">'
@@ -3592,17 +3696,8 @@ async function confirmerAnnulation() {
 
     if(result.error) throw new Error(result.error.message);
 
-    // Tentative d'alerte via WhatsApp (non bloquante)
-    try {
-      var waMsg = encodeURIComponent(
-        '❌ Annulation de réservation\nRéf : ' + _cancelResaData.reference
-        + '\nClient : ' + _cancelResaData.client_nom
-        + '\nArrivée : ' + fmtDate(_cancelResaData.date_arrivee)
-        + '\nDépart : ' + fmtDate(_cancelResaData.date_depart)
-      );
-      // Log seulement — pas d'ouverture automatique pour ne pas perturber l'UX
-      console.log('[Annulation] Notification WhatsApp gérant :', 'https://wa.me/'+WHATSAPP_NUMBER+'?text='+waMsg);
-    } catch(_) {}
+    // Notifications WhatsApp via Fonnte (non bloquant)
+    notifyAnnulationWhatsApp(_cancelResaData);
 
     // Succès
     var msgEl = document.getElementById('cancel-success-msg');
@@ -5379,13 +5474,20 @@ async function loadParametres() {
 
   // Pré-remplir les champs admin (hors réseaux sociaux désormais gérés séparément)
   var fields = {
-    'param-nom':          'site_nom',
-    'param-email-notif':  'email_notif',
+    'param-nom':           'site_nom',
+    'param-email-notif':   'email_notif',
+    'param-wa-number':     'whatsapp_number',
+    'param-site-url':      'site_url',
   };
   Object.keys(fields).forEach(function(fieldId) {
     var el = document.getElementById(fieldId);
     if (el && map[fields[fieldId]]) el.value = map[fields[fieldId]];
   });
+  // Tokens sensibles : afficher un masque si configuré (ne jamais ré-afficher en clair)
+  var fonnteInput = document.getElementById('param-fonnte-token');
+  if (fonnteInput && map['fonnte_token']) fonnteInput.placeholder = '••••••••• (configuré)';
+  var feexpayInput = document.getElementById('param-feexpay-token');
+  if (feexpayInput && map['feexpay_token']) feexpayInput.placeholder = '••••••••• (configuré)';
 
   // Charger les réseaux sociaux dans l'admin
   var socialLinks = DEFAULT_SOCIAL_LINKS;
@@ -5447,9 +5549,15 @@ function applyParametresSite(map) {
     var elFooterAddr = document.getElementById('footer-adresse');
     if (elFooterAddr) elFooterAddr.textContent = map['contact_adresse'];
   }
-  // WhatsApp
-  if (map['contact_wa']) {
-    window.WHATSAPP_NUMBER = map['contact_wa'];
+  // ── Tokens API (Fonnte + FeexPay) ────────────────────────
+  if (map['fonnte_token'])    FONNTE_TOKEN  = map['fonnte_token'];
+  if (map['feexpay_token'])   FEEXPAY_TOKEN = map['feexpay_token'];
+  if (map['whatsapp_number']) window.WHATSAPP_NUMBER = map['whatsapp_number'];
+  if (map['site_url']) {
+    var su = map['site_url'].replace(/\/$/, '');
+    window.SITE_URL = su;
+    window.FEEXPAY_CALLBACK_URL = su + '/payment-callback';
+    window.FEEXPAY_RETURN_URL   = su + '/#reservation';
   }
   // Réseaux sociaux footer + contact (dynamique)
   var socialLinks = DEFAULT_SOCIAL_LINKS; // fallback
@@ -5483,15 +5591,13 @@ function renderPaymentMethodsConfig() {
   var el = document.getElementById('pay-methods-config');
   if (!el) return;
   el.innerHTML = METHODES_PAIEMENT.map(function(m) {
-    var disabled = m.id === 'feexpay' ? ' title="Disponible après intégration Feexpay"' : '';
     return '<div class="pay-method-toggle">'
       + '<div class="pay-method-label">'
       + '<span>'+m.icon+'</span>'
       + '<span>'+m.label+'</span>'
-      + (m.id==='feexpay' ? '<span style="font-size:10px;color:#888;margin-left:4px">(à venir)</span>' : '')
       + '</div>'
-      + '<label class="toggle-switch"'+disabled+'>'
-      + '<input type="checkbox" id="pay-toggle-'+m.id+'"'+(m.actif?' checked':'')+(m.id==='feexpay'?' disabled':'')+' onchange="syncPaymentToggle()">'
+      + '<label class="toggle-switch">'
+      + '<input type="checkbox" id="pay-toggle-'+m.id+'"'+(m.actif?' checked':'')+' onchange="syncPaymentToggle()">'
       + '<div class="toggle-track"></div>'
       + '<div class="toggle-thumb"></div>'
       + '</label>'
@@ -5517,6 +5623,45 @@ async function savePaymentMethods() {
   if (fb) { fb.style.display='block'; fb.textContent='✅ Moyens de paiement sauvegardés ('+actives.length+' actif'+(actives.length>1?'s':'')+')'; }
   showToast('Moyens de paiement mis à jour', 'success');
 }
+
+async function saveFonnteConfig() {
+  var token   = ((document.getElementById('param-fonnte-token')||{}).value||'').trim();
+  var waNum   = ((document.getElementById('param-wa-number')||{}).value||'').trim();
+  var rows = [];
+  if (token)  rows.push({ cle: 'fonnte_token',  valeur: token });
+  if (waNum)  rows.push({ cle: 'whatsapp_number', valeur: waNum });
+  if (!rows.length) { showToast('Aucune valeur à sauvegarder', 'error'); return; }
+  var r = await sb.from('parametres').upsert(rows, { onConflict: 'cle' });
+  if (r.error) { showToast('Erreur : ' + r.error.message, 'error'); return; }
+  // Appliquer en mémoire immédiatement
+  if (token) FONNTE_TOKEN = token;
+  if (waNum) window.WHATSAPP_NUMBER = waNum;
+  var fb = document.getElementById('fonnte-feedback');
+  if (fb) { fb.style.display='block'; setTimeout(function(){ if(fb) fb.style.display='none'; }, 3000); }
+  showToast('✅ Configuration Fonnte sauvegardée', 'success');
+}
+
+async function saveFeexPayConfig() {
+  var token   = ((document.getElementById('param-feexpay-token')||{}).value||'').trim();
+  var siteUrl = ((document.getElementById('param-site-url')||{}).value||'').trim().replace(/\/$/, '');
+  var rows = [];
+  if (token)   rows.push({ cle: 'feexpay_token', valeur: token });
+  if (siteUrl) rows.push({ cle: 'site_url',      valeur: siteUrl });
+  if (!rows.length) { showToast('Aucune valeur à sauvegarder', 'error'); return; }
+  var r = await sb.from('parametres').upsert(rows, { onConflict: 'cle' });
+  if (r.error) { showToast('Erreur : ' + r.error.message, 'error'); return; }
+  // Appliquer en mémoire immédiatement
+  if (token)   FEEXPAY_TOKEN = token;
+  if (siteUrl) {
+    window.SITE_URL = siteUrl;
+    window.FEEXPAY_CALLBACK_URL = siteUrl + '/payment-callback';
+    window.FEEXPAY_RETURN_URL   = siteUrl + '/#reservation';
+  }
+  var fb = document.getElementById('feexpay-config-feedback');
+  if (fb) { fb.style.display='block'; setTimeout(function(){ if(fb) fb.style.display='none'; }, 3000); }
+  showToast('✅ Configuration FeexPay sauvegardée', 'success');
+}
+
 
 async function saveParametres() {
   var fields = {
@@ -5980,7 +6125,290 @@ function safeSetPage(page) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// RÉSEAUX SOCIAUX — Logos officiels SVG + détection automatique
+// FONNTE — Notifications WhatsApp automatiques
+// API : https://fonnte.com/docs
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Envoyer un message WhatsApp via Fonnte
+ * @param {string} to   - Numéro destinataire (format: 22961234567 sans +)
+ * @param {string} msg  - Texte du message
+ */
+async function sendFonnte(to, msg) {
+  if (!FONNTE_TOKEN) {
+    console.warn('[Fonnte] Token non configuré — message non envoyé à', to);
+    return { ok: false, error: 'Token manquant' };
+  }
+  if (IS_SRCDOC) return { ok: false, error: 'Prévisualisation' };
+  // Nettoyer le numéro (retirer +, espaces, tirets)
+  var num = String(to).replace(/[\s\+\-\(\)]/g, '');
+  if (!num) return { ok: false, error: 'Numéro invalide' };
+  try {
+    var res = await fetch(FONNTE_API, {
+      method: 'POST',
+      headers: {
+        'Authorization': FONNTE_TOKEN,
+        'Content-Type':  'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        target:  num,
+        message: msg,
+        typing:  'true',
+        delay:   '1',
+      }).toString()
+    });
+    var json = await res.json();
+    if (!json.status) {
+      console.warn('[Fonnte] Échec envoi:', json);
+      return { ok: false, error: json.reason || 'Erreur inconnue' };
+    }
+    console.log('[Fonnte] Message envoyé à', num);
+    return { ok: true };
+  } catch(e) {
+    console.error('[Fonnte] Exception:', e.message);
+    return { ok: false, error: e.message };
+  }
+}
+
+/**
+ * Envoyer les notifications WhatsApp après une réservation
+ * - Au client : confirmation avec détails
+ * - Aux gérants : alerte nouvelle réservation
+ */
+async function notifyResaWhatsApp(resa, aptNom) {
+  var dateArr = fmtDate(resa.date_arrivee);
+  var dateDep = fmtDate(resa.date_depart);
+  var n       = calcNuits(resa.date_arrivee, resa.date_depart);
+  var montant = fmt(resa.montant_total) + ' FCFA';
+
+  // ── Message client ──────────────────────────────────────
+  var msgClient = '✅ *Réservation confirmée — Quelque Part Guest House*\n\n'
+    + 'Bonjour ' + resa.client_nom + ' 👋\n\n'
+    + 'Votre réservation a bien été enregistrée.\n\n'
+    + '📋 *Détails de votre séjour :*\n'
+    + '• Appartement : ' + aptNom + '\n'
+    + '• Arrivée : ' + dateArr + '\n'
+    + '• Départ : ' + dateDep + '\n'
+    + '• Durée : ' + n + ' nuit' + (n > 1 ? 's' : '') + '\n'
+    + '• Montant total : ' + montant + '\n'
+    + '• Référence : *' + resa.reference + '*\n\n'
+    + '💡 Conservez votre référence pour toute question.\n\n'
+    + '⚠️ _Rappel : l\'acompte de 5 000 FCFA est non remboursable en cas d\'annulation._\n\n'
+    + 'À très bientôt ! 🏠';
+
+  // Envoyer au client (numéro = indicatif + numéro saisi)
+  var clientNum = String(resa.client_tel || '').replace(/[\s\+\-\(\)]/g, '');
+  if (clientNum) {
+    sendFonnte(clientNum, msgClient);
+  }
+
+  // ── Message gérants ─────────────────────────────────────
+  var msgGerant = '🔔 *Nouvelle réservation — Quelque Part*\n\n'
+    + '• Client : ' + resa.client_nom + '\n'
+    + '• Tel : ' + (resa.client_tel || '—') + '\n'
+    + '• Email : ' + (resa.client_email || '—') + '\n'
+    + '• Appartement : ' + aptNom + '\n'
+    + '• Arrivée : ' + dateArr + '\n'
+    + '• Départ : ' + dateDep + '\n'
+    + '• Durée : ' + n + ' nuit' + (n > 1 ? 's' : '') + '\n'
+    + '• Montant : ' + montant + '\n'
+    + '• Référence : ' + resa.reference + '\n'
+    + '• Paiement : ' + (resa.methode_paiement || '—') + '\n\n'
+    + '✅ Confirmée automatiquement.';
+
+  // Envoyer au numéro principal (WHATSAPP_NUMBER)
+  if (WHATSAPP_NUMBER) {
+    sendFonnte(WHATSAPP_NUMBER, msgGerant);
+  }
+
+  // Envoyer aussi aux gérants qui ont un téléphone enregistré
+  try {
+    var { data: gerants } = await sb.from('profils_admins')
+      .select('telephone').eq('actif', true).not('telephone', 'is', null);
+    if (gerants) {
+      gerants.forEach(function(g) {
+        var tel = String(g.telephone || '').replace(/[\s\+\-\(\)]/g, '');
+        if (tel && tel !== WHATSAPP_NUMBER) {
+          sendFonnte(tel, msgGerant);
+        }
+      });
+    }
+  } catch(e) { /* non bloquant */ }
+}
+
+/**
+ * Notifier les gérants d'une annulation
+ */
+async function notifyAnnulationWhatsApp(resa) {
+  var msgGerant = '❌ *Annulation de réservation*\n\n'
+    + '• Client : ' + (resa.client_nom || '—') + '\n'
+    + '• Tel : ' + (resa.client_tel || '—') + '\n'
+    + '• Référence : ' + resa.reference + '\n'
+    + '• Appartement : ' + (resa.apt_nom || '—') + '\n'
+    + '• Arrivée : ' + fmtDate(resa.date_arrivee) + '\n'
+    + '• Départ : ' + fmtDate(resa.date_depart) + '\n\n'
+    + '⚠️ La réservation a été annulée par le client.';
+
+  // Notifier le client
+  var clientNum = String(resa.client_tel || '').replace(/[\s\+\-\(\)]/g, '');
+  if (clientNum) {
+    var msgClient = '❌ *Annulation confirmée — Quelque Part*\n\n'
+      + 'Bonjour ' + (resa.client_nom || '') + ',\n\n'
+      + 'Votre réservation *' + resa.reference + '* a bien été annulée.\n\n'
+      + '⚠️ _Rappel : l\'acompte de 5 000 FCFA est non remboursable._\n\n'
+      + 'Pour toute question, contactez-nous sur WhatsApp. À bientôt !';
+    sendFonnte(clientNum, msgClient);
+  }
+  if (WHATSAPP_NUMBER) sendFonnte(WHATSAPP_NUMBER, msgGerant);
+}
+
+// ═══════════════════════════════════════════════════════════
+// FEEXPAY — Intégration paiement en ligne
+// API : https://feexpay.me/api-docs
+// ═══════════════════════════════════════════════════════════
+
+async function initiateFeexPayment(resaData, apt) {
+  if (!FEEXPAY_TOKEN) {
+    showToast('FeexPay non configuré — ajoutez votre token dans Admin → Paramètres', 'error');
+    return false;
+  }
+  if (IS_SRCDOC) { showToast('Paiement non disponible en prévisualisation', 'info'); return false; }
+  try {
+    var payload = {
+      amount:       Math.round(resaData.montant_total),
+      currency:     'XOF',
+      description:  'Réservation ' + resaData.reference + ' — ' + apt.nom,
+      reference:    resaData.reference,
+      callback_url: FEEXPAY_CALLBACK_URL,
+      return_url:   FEEXPAY_RETURN_URL,
+      customer: {
+        name:  resaData.client_nom,
+        email: resaData.client_email || '',
+        phone: String(resaData.client_tel || '').replace(/[\s\+\-\(\)]/g, '')
+      }
+    };
+    var res  = await fetch(FEEXPAY_API, {
+      method:  'POST',
+      headers: { 'Authorization': 'Bearer ' + FEEXPAY_TOKEN, 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload)
+    });
+    var json = await res.json();
+    if (!res.ok || !json.payment_url) throw new Error(json.message || json.error || 'Erreur FeexPay');
+
+    // Enregistrer la transaction en attente
+    await sb.from('transactions').insert([{
+      reservation_id:  resaData.id,
+      reference:       resaData.reference,
+      feexpay_id:      json.id || json.order_id || null,
+      montant:         resaData.montant_total,
+      statut:          'en_attente',
+      methode:         'feexpay',
+      payment_url:     json.payment_url,
+      created_at:      new Date().toISOString()
+    }]);
+    await sb.from('reservations')
+      .update({ statut_paiement: 'en_attente_feexpay', feexpay_order_id: json.id || json.order_id })
+      .eq('id', resaData.id);
+
+    showFeexPayModal(json.payment_url, resaData);
+    return true;
+  } catch(e) {
+    showToast('Erreur paiement : ' + e.message, 'error');
+    console.error('[FeexPay]', e);
+    return false;
+  }
+}
+
+function showFeexPayModal(paymentUrl, resaData) {
+  var existing = document.getElementById('feexpay-modal');
+  if (existing) existing.remove();
+  var modal = document.createElement('div');
+  modal.id = 'feexpay-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;'
+    + 'display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:12px;width:100%;max-width:520px;'
+    + 'max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.4)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;'
+    + 'padding:14px 18px;border-bottom:1px solid #e5e7eb;background:#f9fafb">'
+    + '<div style="font-weight:600;font-size:14px;color:#111">💳 Paiement sécurisé — FeexPay</div>'
+    + '<button onclick="closeFeexPayModal()" style="background:none;border:none;font-size:20px;'
+    + 'cursor:pointer;color:#6b7280;line-height:1">✕</button>'
+    + '</div>'
+    + '<div style="padding:10px;flex:1;overflow:auto">'
+    + '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;'
+    + 'padding:10px 12px;font-size:12px;color:#166534;margin-bottom:10px">'
+    + '🔒 Paiement sécurisé · Réf : <strong>' + resaData.reference + '</strong>'
+    + ' · Montant : <strong>' + fmt(resaData.montant_total) + ' FCFA</strong></div>'
+    + '<iframe src="' + paymentUrl + '" style="width:100%;height:420px;border:none;border-radius:6px"'
+    + ' allow="payment" title="FeexPay"></iframe>'
+    + '</div>'
+    + '<div style="padding:10px 18px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center">'
+    + 'En cas de problème, notez la référence <strong>' + resaData.reference + '</strong>'
+    + ' et contactez-nous sur WhatsApp.</div>'
+    + '</div>';
+  document.body.appendChild(modal);
+  window._feexpayListener = function(e) {
+    if (!e.data || typeof e.data !== 'object') return;
+    var type = e.data.type || e.data.status || e.data.event || '';
+    if (type === 'payment_success' || type === 'success' || e.data.success) {
+      closeFeexPayModal(); handleFeexPaySuccess(resaData, e.data);
+    } else if (type === 'payment_failed' || type === 'failed' || type === 'error') {
+      closeFeexPayModal(); handleFeexPayFailure(resaData, e.data);
+    }
+  };
+  window.addEventListener('message', window._feexpayListener);
+}
+
+function closeFeexPayModal() {
+  var m = document.getElementById('feexpay-modal');
+  if (m) m.remove();
+  if (window._feexpayListener) {
+    window.removeEventListener('message', window._feexpayListener);
+    window._feexpayListener = null;
+  }
+}
+
+async function handleFeexPaySuccess(resaData, paymentData) {
+  var txId = paymentData.transaction_id || paymentData.id || null;
+  await sb.from('transactions').update({
+    statut: 'reussi', feexpay_tx_id: txId,
+    completed_at: new Date().toISOString(), raw_response: JSON.stringify(paymentData)
+  }).eq('reference', resaData.reference);
+  await sb.from('reservations').update({ statut_paiement: 'paye', statut: 'confirme' }).eq('id', resaData.id);
+  showToast('✅ Paiement confirmé ! Réservation ' + resaData.reference, 'success');
+  notifyResaWhatsApp(resaData, resaData.apt_nom || '');
+}
+
+async function handleFeexPayFailure(resaData, paymentData) {
+  await sb.from('transactions').update({
+    statut: 'echoue', raw_response: JSON.stringify(paymentData),
+    completed_at: new Date().toISOString()
+  }).eq('reference', resaData.reference);
+  await sb.from('reservations').update({ statut_paiement: 'echec_paiement' }).eq('id', resaData.id);
+  showToast('❌ Paiement échoué. Réessayez ou choisissez un autre mode.', 'error');
+}
+
+async function checkFeexPayStatus(feexpayOrderId, resaId) {
+  if (!FEEXPAY_TOKEN || !feexpayOrderId) return null;
+  try {
+    var res  = await fetch('https://api.feexpay.me/api/orders/' + feexpayOrderId + '/status', {
+      headers: { 'Authorization': 'Bearer ' + FEEXPAY_TOKEN }
+    });
+    var json = await res.json();
+    var statut = json.status === 'completed' ? 'reussi'
+               : json.status === 'failed'    ? 'echoue'
+               : json.status === 'refunded'  ? 'rembourse'
+               : 'en_attente';
+    if (statut !== 'en_attente') {
+      await sb.from('transactions').update({ statut: statut }).eq('feexpay_id', feexpayOrderId);
+      if (statut === 'reussi')    await sb.from('reservations').update({ statut_paiement: 'paye' }).eq('id', resaId);
+      if (statut === 'rembourse') await sb.from('reservations').update({ statut_paiement: 'rembourse' }).eq('id', resaId);
+    }
+    return statut;
+  } catch(e) { console.error('[FeexPay check]', e); return null; }
+}
+
 // ═══════════════════════════════════════════════════════════
 var SOCIAL_NETWORKS = [
   {
