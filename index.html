@@ -2364,10 +2364,11 @@ var FONNTE_TOKEN = ''; // Ex: 'abcdef123456'
 var FONNTE_API   = 'https://api.fonnte.com/send';
 
 // ── FeexPay — Agrégateur de paiement ──────────────────────────────────────────
-// API v2 : https://api-v2.feexpay.me/api/transactions/public/requesttopay/{network}
-// ⚠️ Configurez token + shop ID dans Admin → Paramètres
-var FEEXPAY_TOKEN = ''; // API Key (Bearer token)
-var FEEXPAY_SHOP  = ''; // Shop ID (identifiant boutique)
+// Les appels passent par une Edge Function Supabase (évite le blocage CORS navigateur)
+var FEEXPAY_TOKEN = ''; // API Key — chargé depuis Supabase parametres
+var FEEXPAY_SHOP  = ''; // Shop ID — chargé depuis Supabase parametres
+// URL de l'Edge Function proxy FeexPay (à déployer dans Supabase)
+var FEEXPAY_EDGE_URL = 'https://utyimnjxgfeevdhrmgyc.supabase.co/functions/v1/feexpay-proxy';
 // Réseaux disponibles : mtn | moov | celtiis | coris (Bénin)
 var FEEXPAY_NETWORKS = {
   mtn:  {
@@ -6528,29 +6529,35 @@ async function doFeexPayment(resaData) {
 
   try {
     var payload = {
+      network:      network,
       phoneNumber:  phoneNorm,
       amount:       montant,
       shop:         FEEXPAY_SHOP,
+      token:        FEEXPAY_TOKEN,
       first_name:   resaData.client_nom.split(' ')[0] || resaData.client_nom,
       last_name:    resaData.client_nom.split(' ').slice(1).join(' ') || '',
       description:  'Réservation ' + resaData.reference,
       callback_info: resaData.reference,
     };
 
-    var res  = await fetch(netConfig.endpoint, {
+    // Appel via Edge Function Supabase (proxy) — évite le blocage CORS navigateur
+    var session = await sb.auth.getSession();
+    var jwt = (session.data && session.data.session) ? session.data.session.access_token : null;
+
+    var headers = { 'Content-Type': 'application/json' };
+    if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
+
+    var res = await fetch(FEEXPAY_EDGE_URL, {
       method:  'POST',
-      headers: {
-        'Authorization': 'Bearer ' + FEEXPAY_TOKEN,
-        'Content-Type':  'application/json',
-      },
-      body: JSON.stringify(payload)
+      headers: headers,
+      body:    JSON.stringify(payload)
     });
 
     var json = await res.json();
     console.log('[FeexPay response]', json);
 
-    if (!res.ok) {
-      throw new Error(json.message || json.error || 'Erreur FeexPay (' + res.status + ')');
+    if (!res.ok || json.error) {
+      throw new Error(json.error || json.message || 'Erreur FeexPay (' + res.status + ')');
     }
 
     // Réponse acceptée — référence FeexPay
@@ -6618,11 +6625,18 @@ function startFeexPolling(resaData, feexRef, network) {
     }
 
     try {
-      // Vérifier le statut via l'endpoint statut FeexPay
-      var res  = await fetch('https://api-v2.feexpay.me/api/transactions/public/' + feexRef + '/status', {
-        headers: { 'Authorization': 'Bearer ' + FEEXPAY_TOKEN }
+      // Vérifier le statut via le proxy Edge Function
+      var session = await sb.auth.getSession();
+      var jwt = (session.data && session.data.session) ? session.data.session.access_token : null;
+      var headers = { 'Content-Type': 'application/json' };
+      if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
+
+      var res = await fetch(FEEXPAY_EDGE_URL, {
+        method:  'POST',
+        headers: headers,
+        body:    JSON.stringify({ action: 'status', reference: feexRef, token: FEEXPAY_TOKEN })
       });
-      if (!res.ok) return; // Ignorer les erreurs réseau passagères
+      if (!res.ok) return;
 
       var json = await res.json();
       var status = (json.status || '').toUpperCase();
@@ -6697,15 +6711,22 @@ function setFeexFeedback(msg, color) {
  * Vérifier manuellement le statut depuis l'admin (table transactions)
  */
 async function checkFeexPayStatus(feexpayRef, resaId) {
-  if (!FEEXPAY_TOKEN || !feexpayRef) return null;
+  if (!feexpayRef) return null;
   try {
-    var res  = await fetch('https://api-v2.feexpay.me/api/transactions/public/' + feexpayRef + '/status', {
-      headers: { 'Authorization': 'Bearer ' + FEEXPAY_TOKEN }
+    var session = await sb.auth.getSession();
+    var jwt = (session.data && session.data.session) ? session.data.session.access_token : null;
+    var headers = { 'Content-Type': 'application/json' };
+    if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
+
+    var res = await fetch(FEEXPAY_EDGE_URL, {
+      method:  'POST',
+      headers: headers,
+      body:    JSON.stringify({ action: 'status', reference: feexpayRef, token: FEEXPAY_TOKEN })
     });
     var json = await res.json();
     var status = (json.status || '').toUpperCase();
-    var statut = (status === 'SUCCESS' || status === 'SUCCESSFUL' || status === 'COMPLETED') ? 'reussi'
-               : (status === 'FAILED'  || status === 'CANCELLED'  || status === 'REJECTED')  ? 'echoue'
+    var statut = (['SUCCESS','SUCCESSFUL','COMPLETED'].indexOf(status) !== -1) ? 'reussi'
+               : (['FAILED','CANCELLED','REJECTED'].indexOf(status)  !== -1) ? 'echoue'
                : 'en_attente';
     if (statut !== 'en_attente') {
       await sb.from('transactions').update({ statut: statut, completed_at: new Date().toISOString() }).eq('feexpay_id', feexpayRef);
