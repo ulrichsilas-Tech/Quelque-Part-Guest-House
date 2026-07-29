@@ -2204,18 +2204,24 @@ CREATE POLICY "Hero images admin delete" ON storage.objects
               <button class="admin-sm-btn" onclick="saveParametres()">💾 Sauvegarder les paramètres</button>
             </div>
 
-            <!-- ── WhatsApp (numéro de contact du site) ── -->
+            <!-- ── Fonnte (WhatsApp) ── -->
             <div class="admin-card" style="padding:16px;border-left:3px solid #25D366">
-              <div class="admin-card-title" style="margin-bottom:4px">📱 WhatsApp — Numéro de contact</div>
+              <div class="admin-card-title" style="margin-bottom:4px">📱 Fonnte — Notifications WhatsApp</div>
               <p style="font-size:11.5px;color:rgba(255,255,255,.4);margin:0 0 12px;line-height:1.7">
-                Numéro utilisé par les boutons "Écrire sur WhatsApp" du site (liens wa.me).
+                Obtenez votre token sur <a href="https://fonnte.com" target="_blank" style="color:#25D366">fonnte.com</a>
+                → Mon compte → Token API.<br>
+                Ce token permet l'envoi automatique de messages WhatsApp aux clients et aux gérants.
               </p>
               <div class="admin-form-group">
+                <label class="admin-label">Token Fonnte *</label>
+                <input class="admin-input" id="param-fonnte-token" placeholder="Votre token Fonnte" type="password" autocomplete="off">
+              </div>
+              <div class="admin-form-group" style="margin-top:10px">
                 <label class="admin-label">Numéro WhatsApp principal (format: 22961234567)</label>
                 <input class="admin-input" id="param-wa-number" placeholder="22900000000">
               </div>
-              <button class="admin-sm-btn" onclick="saveWhatsAppConfig()" style="margin-top:10px">💾 Sauvegarder</button>
-              <div id="wa-feedback" style="font-size:11px;color:#4ade80;margin-top:6px;display:none">✅ Numéro WhatsApp sauvegardé</div>
+              <button class="admin-sm-btn" onclick="saveFonnteConfig()" style="margin-top:10px">💾 Sauvegarder</button>
+              <div id="fonnte-feedback" style="font-size:11px;color:#4ade80;margin-top:6px;display:none">✅ Configuration Fonnte sauvegardée</div>
             </div>
 
             <!-- ── FeexPay ── -->
@@ -2350,6 +2356,12 @@ var SITE_URL = 'https://quelquepart.vercel.app';
 
 // Numéro WhatsApp (format international sans +)
 var WHATSAPP_NUMBER = '22900000000';
+
+// ── Fonnte — API WhatsApp ─────────────────────────────────────────────────────
+// Obtenez votre token sur https://fonnte.com → Settings → Token
+// ⚠️ À renseigner avec votre vrai token Fonnte
+var FONNTE_TOKEN = ''; // Ex: 'abcdef123456'
+var FONNTE_API   = 'https://api.fonnte.com/send';
 
 // ── FeexPay — Agrégateur de paiement ──────────────────────────────────────────
 // Les appels passent par une Edge Function Supabase (évite le blocage CORS navigateur)
@@ -3471,6 +3483,18 @@ async function submitResa(prefix, aptId) {
     return;
   }
 
+  // ── Notifications WhatsApp via Fonnte (non bloquant) ──
+  notifyResaWhatsApp({
+    reference:      ref,
+    client_nom:     nom,
+    client_tel:     tel,
+    client_email:   email,
+    date_arrivee:   arr,
+    date_depart:    dep,
+    montant_total:  montant,
+    methode_paiement: methode
+  }, apt.nom);
+
   // Afficher succès
   var successHTML = '<div class="book-success show">'
     +'<div class="success-emoji">✅</div>'
@@ -3722,6 +3746,9 @@ async function confirmerAnnulation() {
       .eq('id', _cancelResaData.id);
 
     if(result.error) throw new Error(result.error.message);
+
+    // Notifications WhatsApp via Fonnte (non bloquant)
+    notifyAnnulationWhatsApp(_cancelResaData);
 
     // Succès
     var msgEl = document.getElementById('cancel-success-msg');
@@ -5508,6 +5535,8 @@ async function loadParametres() {
     if (el && map[fields[fieldId]]) el.value = map[fields[fieldId]];
   });
   // Tokens sensibles : afficher un masque si configuré (ne jamais ré-afficher en clair)
+  var fonnteInput = document.getElementById('param-fonnte-token');
+  if (fonnteInput && map['fonnte_token']) fonnteInput.placeholder = '••••••••• (configuré)';
   var feexpayInput = document.getElementById('param-feexpay-token');
   if (feexpayInput && map['feexpay_token']) feexpayInput.placeholder = '••••••••• (configuré)';
   var feexpayShop = document.getElementById('param-feexpay-shop');
@@ -5573,7 +5602,8 @@ function applyParametresSite(map) {
     var elFooterAddr = document.getElementById('footer-adresse');
     if (elFooterAddr) elFooterAddr.textContent = map['contact_adresse'];
   }
-  // ── Tokens API (FeexPay) ──────────────────────────────────
+  // ── Tokens API (Fonnte + FeexPay) ────────────────────────
+  if (map['fonnte_token'])    FONNTE_TOKEN  = map['fonnte_token'];
   if (map['feexpay_token'])   FEEXPAY_TOKEN = map['feexpay_token'];
   if (map['feexpay_shop'])    FEEXPAY_SHOP  = map['feexpay_shop'];
   if (map['whatsapp_number']) window.WHATSAPP_NUMBER = map['whatsapp_number'];
@@ -5646,16 +5676,21 @@ async function savePaymentMethods() {
   showToast('Moyens de paiement mis à jour', 'success');
 }
 
-async function saveWhatsAppConfig() {
+async function saveFonnteConfig() {
+  var token   = ((document.getElementById('param-fonnte-token')||{}).value||'').trim();
   var waNum   = ((document.getElementById('param-wa-number')||{}).value||'').trim();
-  if (!waNum) { showToast('Aucune valeur à sauvegarder', 'error'); return; }
-  var r = await sb.from('parametres').upsert([{ cle: 'whatsapp_number', valeur: waNum }], { onConflict: 'cle' });
+  var rows = [];
+  if (token)  rows.push({ cle: 'fonnte_token',  valeur: token });
+  if (waNum)  rows.push({ cle: 'whatsapp_number', valeur: waNum });
+  if (!rows.length) { showToast('Aucune valeur à sauvegarder', 'error'); return; }
+  var r = await sb.from('parametres').upsert(rows, { onConflict: 'cle' });
   if (r.error) { showToast('Erreur : ' + r.error.message, 'error'); return; }
   // Appliquer en mémoire immédiatement
-  window.WHATSAPP_NUMBER = waNum;
-  var fb = document.getElementById('wa-feedback');
+  if (token) FONNTE_TOKEN = token;
+  if (waNum) window.WHATSAPP_NUMBER = waNum;
+  var fb = document.getElementById('fonnte-feedback');
   if (fb) { fb.style.display='block'; setTimeout(function(){ if(fb) fb.style.display='none'; }, 3000); }
-  showToast('✅ Numéro WhatsApp sauvegardé', 'success');
+  showToast('✅ Configuration Fonnte sauvegardée', 'success');
 }
 
 async function saveFeexPayConfig() {
@@ -6140,6 +6175,144 @@ function safeSetPage(page) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// FONNTE — Notifications WhatsApp automatiques
+// API : https://fonnte.com/docs
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Envoyer un message WhatsApp via Fonnte
+ * @param {string} to   - Numéro destinataire (format: 22961234567 sans +)
+ * @param {string} msg  - Texte du message
+ */
+async function sendFonnte(to, msg) {
+  if (!FONNTE_TOKEN) {
+    console.warn('[Fonnte] Token non configuré — message non envoyé à', to);
+    return { ok: false, error: 'Token manquant' };
+  }
+  if (IS_SRCDOC) return { ok: false, error: 'Prévisualisation' };
+  // Nettoyer le numéro (retirer +, espaces, tirets)
+  var num = String(to).replace(/[\s\+\-\(\)]/g, '');
+  if (!num) return { ok: false, error: 'Numéro invalide' };
+  try {
+    var res = await fetch(FONNTE_API, {
+      method: 'POST',
+      headers: {
+        'Authorization': FONNTE_TOKEN,
+        'Content-Type':  'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        target:  num,
+        message: msg,
+        typing:  'true',
+        delay:   '1',
+      }).toString()
+    });
+    var json = await res.json();
+    if (!json.status) {
+      console.warn('[Fonnte] Échec envoi:', json);
+      return { ok: false, error: json.reason || 'Erreur inconnue' };
+    }
+    console.log('[Fonnte] Message envoyé à', num);
+    return { ok: true };
+  } catch(e) {
+    console.error('[Fonnte] Exception:', e.message);
+    return { ok: false, error: e.message };
+  }
+}
+
+/**
+ * Envoyer les notifications WhatsApp après une réservation
+ * - Au client : confirmation avec détails
+ * - Aux gérants : alerte nouvelle réservation
+ */
+async function notifyResaWhatsApp(resa, aptNom) {
+  var dateArr = fmtDate(resa.date_arrivee);
+  var dateDep = fmtDate(resa.date_depart);
+  var n       = calcNuits(resa.date_arrivee, resa.date_depart);
+  var montant = fmt(resa.montant_total) + ' FCFA';
+
+  // ── Message client ──────────────────────────────────────
+  var msgClient = '✅ *Réservation confirmée — Quelque Part Guest House*\n\n'
+    + 'Bonjour ' + resa.client_nom + ' 👋\n\n'
+    + 'Votre réservation a bien été enregistrée.\n\n'
+    + '📋 *Détails de votre séjour :*\n'
+    + '• Appartement : ' + aptNom + '\n'
+    + '• Arrivée : ' + dateArr + '\n'
+    + '• Départ : ' + dateDep + '\n'
+    + '• Durée : ' + n + ' nuit' + (n > 1 ? 's' : '') + '\n'
+    + '• Montant total : ' + montant + '\n'
+    + '• Référence : *' + resa.reference + '*\n\n'
+    + '💡 Conservez votre référence pour toute question.\n\n'
+    + '⚠️ _Rappel : l\'acompte de 5 000 FCFA est non remboursable en cas d\'annulation._\n\n'
+    + 'À très bientôt ! 🏠';
+
+  // Envoyer au client (numéro = indicatif + numéro saisi)
+  var clientNum = String(resa.client_tel || '').replace(/[\s\+\-\(\)]/g, '');
+  if (clientNum) {
+    sendFonnte(clientNum, msgClient);
+  }
+
+  // ── Message gérants ─────────────────────────────────────
+  var msgGerant = '🔔 *Nouvelle réservation — Quelque Part*\n\n'
+    + '• Client : ' + resa.client_nom + '\n'
+    + '• Tel : ' + (resa.client_tel || '—') + '\n'
+    + '• Email : ' + (resa.client_email || '—') + '\n'
+    + '• Appartement : ' + aptNom + '\n'
+    + '• Arrivée : ' + dateArr + '\n'
+    + '• Départ : ' + dateDep + '\n'
+    + '• Durée : ' + n + ' nuit' + (n > 1 ? 's' : '') + '\n'
+    + '• Montant : ' + montant + '\n'
+    + '• Référence : ' + resa.reference + '\n'
+    + '• Paiement : ' + (resa.methode_paiement || '—') + '\n\n'
+    + '✅ Confirmée automatiquement.';
+
+  // Envoyer au numéro principal (WHATSAPP_NUMBER)
+  if (WHATSAPP_NUMBER) {
+    sendFonnte(WHATSAPP_NUMBER, msgGerant);
+  }
+
+  // Envoyer aussi aux gérants qui ont un téléphone enregistré
+  try {
+    var { data: gerants } = await sb.from('profils_admins')
+      .select('telephone').eq('actif', true).not('telephone', 'is', null);
+    if (gerants) {
+      gerants.forEach(function(g) {
+        var tel = String(g.telephone || '').replace(/[\s\+\-\(\)]/g, '');
+        if (tel && tel !== WHATSAPP_NUMBER) {
+          sendFonnte(tel, msgGerant);
+        }
+      });
+    }
+  } catch(e) { /* non bloquant */ }
+}
+
+/**
+ * Notifier les gérants d'une annulation
+ */
+async function notifyAnnulationWhatsApp(resa) {
+  var msgGerant = '❌ *Annulation de réservation*\n\n'
+    + '• Client : ' + (resa.client_nom || '—') + '\n'
+    + '• Tel : ' + (resa.client_tel || '—') + '\n'
+    + '• Référence : ' + resa.reference + '\n'
+    + '• Appartement : ' + (resa.apt_nom || '—') + '\n'
+    + '• Arrivée : ' + fmtDate(resa.date_arrivee) + '\n'
+    + '• Départ : ' + fmtDate(resa.date_depart) + '\n\n'
+    + '⚠️ La réservation a été annulée par le client.';
+
+  // Notifier le client
+  var clientNum = String(resa.client_tel || '').replace(/[\s\+\-\(\)]/g, '');
+  if (clientNum) {
+    var msgClient = '❌ *Annulation confirmée — Quelque Part*\n\n'
+      + 'Bonjour ' + (resa.client_nom || '') + ',\n\n'
+      + 'Votre réservation *' + resa.reference + '* a bien été annulée.\n\n'
+      + '⚠️ _Rappel : l\'acompte de 5 000 FCFA est non remboursable._\n\n'
+      + 'Pour toute question, contactez-nous sur WhatsApp. À bientôt !';
+    sendFonnte(clientNum, msgClient);
+  }
+  if (WHATSAPP_NUMBER) sendFonnte(WHATSAPP_NUMBER, msgGerant);
+}
+
+// ═══════════════════════════════════════════════════════════
 // FEEXPAY — API v2 (Mobile Money direct)
 // Doc : https://docs.feexpay.me
 // Flux : client saisit numéro → API envoie demande push →
@@ -6504,6 +6677,7 @@ async function onFeexPaymentConfirmed(resaData, feexRef, responseData) {
   setTimeout(function() {
     closeFeexPayModal();
     showToast('✅ Paiement confirmé ! Réservation ' + resaData.reference, 'success');
+    notifyResaWhatsApp(resaData, resaData.apt_nom || '');
     // Rafraîchir la page de confirmation
     showResaConfirmation(resaData);
   }, 1500);
