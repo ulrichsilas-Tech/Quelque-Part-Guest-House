@@ -6584,10 +6584,16 @@ async function doFeexPayment(resaData) {
     };
 
     // Appel via Edge Function Supabase (proxy) — évite le blocage CORS navigateur
+    // IMPORTANT : SUPABASE_ANON_KEY est désormais une clé "publishable" (sb_publishable_...),
+    // pas un JWT. Elle doit toujours partir dans le header "apikey", jamais dans
+    // "Authorization: Bearer" (qui, lui, est réservé à un vrai JWT de session utilisateur).
     var session = await sb.auth.getSession();
     var jwt = (session.data && session.data.session) ? session.data.session.access_token : null;
 
-    var headers = { 'Content-Type': 'application/json' };
+    var headers = {
+      'Content-Type': 'application/json',
+      'apikey':       SUPABASE_ANON_KEY
+    };
     if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
 
     var res = await fetch(FEEXPAY_EDGE_URL, {
@@ -6671,7 +6677,7 @@ function startFeexPolling(resaData, feexRef, network) {
       // Vérifier le statut via le proxy Edge Function
       var session = await sb.auth.getSession();
       var jwt = (session.data && session.data.session) ? session.data.session.access_token : null;
-      var headers = { 'Content-Type': 'application/json' };
+      var headers = { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY };
       if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
 
       var res = await fetch(FEEXPAY_EDGE_URL, {
@@ -6758,7 +6764,7 @@ async function checkFeexPayStatus(feexpayRef, resaId) {
   try {
     var session = await sb.auth.getSession();
     var jwt = (session.data && session.data.session) ? session.data.session.access_token : null;
-    var headers = { 'Content-Type': 'application/json' };
+    var headers = { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY };
     if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
 
     var res = await fetch(FEEXPAY_EDGE_URL, {
