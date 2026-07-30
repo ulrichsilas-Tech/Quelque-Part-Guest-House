@@ -6368,7 +6368,7 @@ function showFeexPayModal(resaData, preselectedNetwork) {
     var logo = PAY_LOGOS[id]
       ? '<span style="display:block;width:44px;height:44px;margin:0 auto 5px;border-radius:8px;overflow:hidden;background:#f3f4f6">' + PAY_LOGOS[id] + '</span>'
       : '<span style="font-size:24px;display:block;margin-bottom:5px">📱</span>';
-    return '<button id="fp-btn-'+id+'" onclick="selectFeexNetwork(\''+id+'\')" '
+    return '<button id="fp-btn-'+id+'" onclick="selectFeexNetwork(\''+id+'\', true)" '
       + 'style="padding:10px 4px 8px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;'
       + 'cursor:pointer;transition:all .18s;font-size:10.5px;font-weight:600;color:#374151;line-height:1.3;width:100%">'
       + logo + label + '</button>';
@@ -6445,7 +6445,7 @@ function showFeexPayModal(resaData, preselectedNetwork) {
   }
 }
 
-function selectFeexNetwork(network) {
+function selectFeexNetwork(network, manual) {
   var networks = ['mtn', 'moov', 'celtiis'];
   networks.forEach(function(n) {
     var btn = document.getElementById('fp-btn-' + n);
@@ -6461,21 +6461,52 @@ function selectFeexNetwork(network) {
     }
   });
   window._feexSelectedNetwork = network;
+  // Un clic manuel sur un bouton réseau devient la référence : la saisie du
+  // numéro ne doit plus jamais l'écraser silencieusement ensuite.
+  if (manual) window._feexNetworkManuallyChosen = true;
+
+  // Si un numéro est déjà saisi, on revérifie tout de suite la cohérence
+  // réseau ↔ numéro pour prévenir l'utilisateur avant même qu'il ne clique "Payer".
+  var phoneInputEl = document.getElementById('fp-phone');
+  if (phoneInputEl && phoneInputEl.value) refreshFeexNetworkHint(phoneInputEl.value, network);
+}
+
+/**
+ * Met à jour le message d'aide sous le champ numéro en comparant le réseau
+ * sélectionné (bouton actif) et le réseau réellement détecté depuis le numéro.
+ */
+function refreshFeexNetworkHint(phoneRaw, selectedNetwork) {
+  var hint   = document.getElementById('fp-network-hint');
+  var labels = { mtn: 'MTN MoMo', moov: 'Moov Money', celtiis: 'Celtiis Bénin' };
+  var detected = detectFeexNetwork(phoneRaw);
+  if (!hint) return detected;
+
+  if (!detected.network) {
+    hint.textContent = 'Réseau non détecté — vérifiez le numéro';
+    hint.style.color = '#d97706';
+  } else if (selectedNetwork && detected.network !== selectedNetwork) {
+    hint.textContent = '❌ Ce numéro correspond à ' + (labels[detected.network] || detected.network)
+      + ', pas à ' + (labels[selectedNetwork] || selectedNetwork);
+    hint.style.color = '#dc2626';
+  } else {
+    hint.textContent = '✅ Réseau détecté : ' + (labels[detected.network] || detected.network);
+    hint.style.color = '#059669';
+  }
+  return detected;
 }
 
 function onFeexPhoneInput(input) {
-  var hint     = document.getElementById('fp-network-hint');
   var detected = detectFeexNetwork(input.value);
-  var labels   = { mtn: 'MTN MoMo', moov: 'Moov Money', celtiis: 'Celtiis Bénin' };
-  if (detected.network) {
-    selectFeexNetwork(detected.network);
-    if (hint) {
-      hint.textContent = '✅ Réseau détecté : ' + (labels[detected.network] || detected.network);
-      hint.style.color = '#059669';
-    }
+
+  if (!window._feexNetworkManuallyChosen) {
+    // Aucun choix manuel encore fait : on continue à pré-sélectionner
+    // automatiquement le réseau détecté, comme avant, pour le confort de saisie.
+    if (detected.network) selectFeexNetwork(detected.network, false);
+    refreshFeexNetworkHint(input.value, detected.network);
   } else {
-    window._feexSelectedNetwork = null;
-    if (hint) { hint.textContent = 'Réseau non détecté — sélectionnez manuellement'; hint.style.color = '#d97706'; }
+    // L'utilisateur a déjà cliqué un réseau manuellement : on NE change plus
+    // le bouton sélectionné tout seul, on se contente d'alerter en cas d'écart.
+    refreshFeexNetworkHint(input.value, window._feexSelectedNetwork);
   }
 }
 
@@ -6484,6 +6515,7 @@ function closeFeexPayModal() {
   if (m) m.remove();
   window._feexResaData = null;
   window._feexSelectedNetwork = null;
+  window._feexNetworkManuallyChosen = false;
   window._feexPollingTimer = null;
 }
 
@@ -6511,6 +6543,17 @@ async function doFeexPayment(resaData) {
   var phoneNorm = detected.phone;
   if (!phoneNorm || phoneNorm.length < 10) {
     setFeexFeedback('⚠️ Numéro invalide (format : 2290XXXXXXXXX)', '#d97706'); return;
+  }
+
+  // ── Vérification stricte réseau ↔ numéro (avant tout appel FeexPay) ──────
+  // Si le préfixe du numéro correspond clairement à un autre opérateur que
+  // celui sélectionné, on refuse le paiement immédiatement.
+  if (detected.network && detected.network !== network) {
+    setFeexFeedback(
+      '❌ Le numéro saisi ne correspond pas au réseau de paiement sélectionné. Veuillez vérifier votre numéro ou choisir le bon opérateur.',
+      '#dc2626'
+    );
+    return;
   }
 
   var netConfig = FEEXPAY_NETWORKS[network];
