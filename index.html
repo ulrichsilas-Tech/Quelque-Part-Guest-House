@@ -6523,8 +6523,11 @@ function closeFeexPayModal() {
  * Envoyer la demande de paiement à FeexPay API v2
  */
 async function doFeexPayment(resaData) {
-  if (!FEEXPAY_TOKEN || !FEEXPAY_SHOP) {
-    showToast('FeexPay non configuré — token ou Shop ID manquant', 'error');
+  // FEEXPAY_TOKEN / FEEXPAY_SHOP ne sont plus utilisés ici : ils sont désormais
+  // gérés exclusivement côté serveur (secrets de l'Edge Function feexpay-proxy),
+  // conformément aux recommandations de sécurité FeexPay.
+  if (!resaData || !resaData.id) {
+    showToast('Réservation introuvable', 'error');
     return;
   }
 
@@ -6561,6 +6564,9 @@ async function doFeexPayment(resaData) {
     setFeexFeedback('⚠️ Réseau non supporté', '#d97706'); return;
   }
 
+  // Le montant réel est désormais recalculé et vérifié côté serveur (Edge Function)
+  // à partir de la réservation en base — on ne fait plus confiance à ce montant
+  // client pour la validation finale, seulement pour un feedback UX immédiat.
   var montant = Math.round(resaData.montant_total);
   if (montant < 100)       { setFeexFeedback('⚠️ Montant minimum : 100 FCFA', '#d97706'); return; }
   if (montant > 2000000)   { setFeexFeedback('⚠️ Montant maximum : 2 000 000 FCFA', '#d97706'); return; }
@@ -6571,16 +6577,18 @@ async function doFeexPayment(resaData) {
   setFeexFeedback('Connexion à FeexPay…', '#6b7280');
 
   try {
+    // IMPORTANT (sécurité, recommandation officielle FeexPay) :
+    // on n'envoie plus jamais "token" ni "shop" depuis le navigateur, et
+    // "amount" n'est envoyé qu'à titre indicatif — c'est l'Edge Function qui
+    // va recalculer le vrai montant depuis la base avant d'appeler FeexPay.
     var payload = {
-      network:      network,
-      phoneNumber:  phoneNorm,
-      amount:       montant,
-      shop:         FEEXPAY_SHOP,
-      token:        FEEXPAY_TOKEN,
-      first_name:   resaData.client_nom.split(' ')[0] || resaData.client_nom,
-      last_name:    resaData.client_nom.split(' ').slice(1).join(' ') || '',
-      description:  'Réservation ' + resaData.reference,
-      callback_info: resaData.reference,
+      network:        network,
+      phoneNumber:    phoneNorm,
+      reservation_id: resaData.id,
+      first_name:     resaData.client_nom.split(' ')[0] || resaData.client_nom,
+      last_name:      resaData.client_nom.split(' ').slice(1).join(' ') || '',
+      description:    'Réservation ' + resaData.reference,
+      callback_info:  resaData.reference,
     };
 
     // Appel via Edge Function Supabase (proxy) — évite le blocage CORS navigateur
@@ -6674,30 +6682,25 @@ function startFeexPolling(resaData, feexRef, network) {
     }
 
     try {
-      // Vérifier le statut via le proxy Edge Function
-      var session = await sb.auth.getSession();
-      var jwt = (session.data && session.data.session) ? session.data.session.access_token : null;
-      var headers = { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY };
-      if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
+      // Vérifier le statut via NOTRE PROPRE base Supabase — mise à jour en temps
+      // réel par la Edge Function feexpay-webhook dès que FeexPay notifie le résultat.
+      // (On n'interroge plus FeexPay directement : leur confirmation passe par Webhook,
+      // pas par un endpoint de statut interrogeable — voir doc FeexPay.)
+      var { data: txRow } = await sb.from('transactions')
+        .select('statut')
+        .eq('feexpay_id', feexRef)
+        .maybeSingle();
 
-      var res = await fetch(FEEXPAY_EDGE_URL, {
-        method:  'POST',
-        headers: headers,
-        body:    JSON.stringify({ action: 'status', reference: feexRef, token: FEEXPAY_TOKEN })
-      });
-      if (!res.ok) return;
+      var status = txRow ? String(txRow.statut || '').toLowerCase() : 'en_attente';
 
-      var json = await res.json();
-      var status = (json.status || '').toUpperCase();
-
-      if (status === 'SUCCESS' || status === 'SUCCESSFUL' || status === 'COMPLETED') {
+      if (status === 'reussi') {
         clearInterval(window._feexPollingTimer);
-        await onFeexPaymentConfirmed(resaData, feexRef, json);
-      } else if (status === 'FAILED' || status === 'CANCELLED' || status === 'REJECTED') {
+        await onFeexPaymentConfirmed(resaData, feexRef, {});
+      } else if (status === 'echoue') {
         clearInterval(window._feexPollingTimer);
-        await onFeexPaymentFailed(resaData, feexRef, json);
+        await onFeexPaymentFailed(resaData, feexRef, {});
       }
-      // PENDING → continuer le polling
+      // en_attente → continuer le polling
     } catch(e) {
       // Erreur réseau passagère — continuer
     }
@@ -6762,24 +6765,18 @@ function setFeexFeedback(msg, color) {
 async function checkFeexPayStatus(feexpayRef, resaId) {
   if (!feexpayRef) return null;
   try {
-    var session = await sb.auth.getSession();
-    var jwt = (session.data && session.data.session) ? session.data.session.access_token : null;
-    var headers = { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY };
-    if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
+    // Lecture directe de notre table transactions, tenue à jour par le Webhook FeexPay.
+    var { data: txRow } = await sb.from('transactions')
+      .select('statut')
+      .eq('feexpay_id', feexpayRef)
+      .maybeSingle();
 
-    var res = await fetch(FEEXPAY_EDGE_URL, {
-      method:  'POST',
-      headers: headers,
-      body:    JSON.stringify({ action: 'status', reference: feexpayRef, token: FEEXPAY_TOKEN })
-    });
-    var json = await res.json();
-    var status = (json.status || '').toUpperCase();
-    var statut = (['SUCCESS','SUCCESSFUL','COMPLETED'].indexOf(status) !== -1) ? 'reussi'
-               : (['FAILED','CANCELLED','REJECTED'].indexOf(status)  !== -1) ? 'echoue'
-               : 'en_attente';
-    if (statut !== 'en_attente') {
-      await sb.from('transactions').update({ statut: statut, completed_at: new Date().toISOString() }).eq('feexpay_id', feexpayRef);
-      if (statut === 'reussi') await sb.from('reservations').update({ statut_paiement: 'paye', statut: 'confirme' }).eq('id', resaId);
+    var statut = txRow ? String(txRow.statut || 'en_attente').toLowerCase() : 'en_attente';
+
+    if (statut === 'reussi') {
+      await sb.from('reservations').update({ statut_paiement: 'paye', statut: 'confirme' }).eq('id', resaId);
+    } else if (statut === 'echoue') {
+      await sb.from('reservations').update({ statut_paiement: 'echec_paiement' }).eq('id', resaId);
     }
     return statut;
   } catch(e) { console.error('[FeexPay check]', e); return null; }
