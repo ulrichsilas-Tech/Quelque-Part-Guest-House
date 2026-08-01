@@ -6338,13 +6338,37 @@ async function notifyAnnulationWhatsApp(resa) {
  * MTN  : préfixes 01 (22901xxxxxxx / 0161..0169 / 0190..0199)
  * Moov : préfixes 02 (22902xxxxxxx / 0196..0197)
  */
-function detectFeexNetwork(phoneRaw) {
-  var p = String(phoneRaw).replace(/[\s\+\-\(\)]/g, '');
-  if (p.startsWith('0') && p.length === 10) p = '229' + p.substring(1);
-  if (!p.startsWith('229')) p = '229' + p;
+/**
+ * Normalise n'importe quel format de numéro béninois saisi par l'utilisateur
+ * vers le format international complet exigé par FeexPay depuis le nouveau
+ * plan de numérotation du Bénin (en vigueur depuis le 30/11/2024) :
+ *   229 + 01 + <ancien numéro à 8 chiffres>   →  ex. 2290197867838
+ * Gère les formats saisis possibles : ancien 8 chiffres, nouveau 10 chiffres
+ * (avec ou sans le 0 de tête), avec ou sans l'indicatif 229 déjà présent.
+ * Retourne null si le numéro ne fait pas 8 chiffres "coeur" au final (invalide).
+ */
+function normalizeBeninPhone(raw) {
+  var digits = String(raw).replace(/\D/g, ''); // ne garder que les chiffres
 
-  var local   = p.substring(3);
-  var prefix2 = local.substring(0, 2);
+  if (digits.startsWith('229')) digits = digits.substring(3);
+
+  if (digits.length === 10 && digits.startsWith('01')) {
+    digits = digits.substring(2);           // nouveau format déjà complet → isoler le coeur
+  } else if (digits.length === 9 && digits.startsWith('0')) {
+    digits = digits.substring(1);           // ancien réflexe "0" de composition locale
+  }
+
+  if (digits.length !== 8) return null;      // ni ancien ni nouveau format reconnaissable
+
+  return '229' + '01' + digits;
+}
+
+function detectFeexNetwork(phoneRaw) {
+  var p = normalizeBeninPhone(phoneRaw);
+  if (!p) return { network: null, phone: String(phoneRaw).replace(/\D/g, '') };
+
+  var core8   = p.substring(5); // 229 + 01 = 5 caractères, le reste est le numéro coeur
+  var prefix2 = core8.substring(0, 2);
 
   // MTN Bénin
   var mtnPrefixes     = ['61','62','63','64','65','66','90','91','96','97'];
@@ -6368,9 +6392,7 @@ function showFeexPayModal(resaData, preselectedNetwork) {
   var existing = document.getElementById('feexpay-modal');
   if (existing) existing.remove();
 
-  var clientPhone = String(resaData.client_tel || '').replace(/[\s\+\-\(\)]/g, '');
-  if (clientPhone.startsWith('0') && clientPhone.length === 10) clientPhone = '229' + clientPhone.substring(1);
-  if (!clientPhone.startsWith('229') && clientPhone.length > 0) clientPhone = '229' + clientPhone;
+  var clientPhone = resaData.client_tel ? (normalizeBeninPhone(resaData.client_tel) || '') : '';
 
   var modal = document.createElement('div');
   modal.id = 'feexpay-modal';
@@ -6422,7 +6444,7 @@ function showFeexPayModal(resaData, preselectedNetwork) {
     // Numéro
     + '<div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Numéro Mobile Money</div>'
     + '<input id="fp-phone" type="tel" value="' + (clientPhone || '') + '" '
-    + 'placeholder="2290XXXXXXXXX" maxlength="13" '
+    + 'placeholder="2290197867838" maxlength="13" '
     + 'style="width:100%;padding:11px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;'
     + 'outline:none;box-sizing:border-box;font-family:monospace;letter-spacing:.04em;margin-bottom:5px" '
     + 'oninput="onFeexPhoneInput(this)">'
@@ -6558,8 +6580,8 @@ async function doFeexPayment(resaData) {
   }
 
   var phoneNorm = detected.phone;
-  if (!phoneNorm || phoneNorm.length < 10) {
-    setFeexFeedback('⚠️ Numéro invalide (format : 2290XXXXXXXXX)', '#d97706'); return;
+  if (!phoneNorm || phoneNorm.length !== 13) {
+    setFeexFeedback('⚠️ Numéro invalide (format attendu : 2290197867838, 13 chiffres)', '#d97706'); return;
   }
 
   // ── Vérification stricte réseau ↔ numéro (avant tout appel FeexPay) ──────
