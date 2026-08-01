@@ -2390,6 +2390,17 @@ var FEEXPAY_NETWORKS = {
   coris:   { label: 'Coris',    prefix: '', endpoint: 'https://api-v2.feexpay.me/api/transactions/public/requesttopay/coris' },
 };
 
+// Convertit un identifiant technique de méthode de paiement (stocké en base,
+// ex. "moov") en libellé lisible pour l'affichage (ex. "Moov Money").
+// Reste compatible avec les anciennes réservations où le libellé complet
+// était stocké directement (avant correctif du sélecteur de réseau).
+function mpLabel(id) {
+  if (!id) return '—';
+  if (FEEXPAY_NETWORKS[id]) return FEEXPAY_NETWORKS[id].label;
+  if (id === 'carte') return 'Carte bancaire';
+  return id; // déjà un libellé lisible (anciennes données) ou valeur inconnue
+}
+
 // ── Emails transactionnels — Backend Resend via Supabase Edge Functions ───────
 var EDGE_FUNCTION_URL = 'https://utyimnjxgfeevdhrmgyc.supabase.co/functions/v1/send-email';
 // Emails gérants : plus codés en dur — chargés dynamiquement depuis profils_admins
@@ -3373,7 +3384,10 @@ async function submitResa(prefix, aptId) {
     var sel = document.querySelector('#'+prefix+'-submit');
     var parent = sel && sel.parentNode;
     var opt = parent && parent.querySelector('.pay-opt.selected');
-    return opt ? opt.textContent.trim() : 'MTN MoMo';
+    // IMPORTANT : on utilise l'identifiant technique (data-pay-id, ex. "moov"),
+    // jamais le texte affiché du bouton (ex. "Moov Money") — c'est cet
+    // identifiant qui est comparé plus bas à ['mtn','moov','celtiis'].
+    return opt ? opt.getAttribute('data-pay-id') : 'mtn';
   })();
   var errShown=false;
   // Validation indépendante de chaque champ
@@ -3710,7 +3724,7 @@ function renderResaPreview(r) {
     ['Départ',       fmtDate(r.date_depart)],
     ['Client',       r.client_nom],
     ['Montant',      fmtMontant(r.montant_total)],
-    ['Paiement',     r.methode_paiement],
+    ['Paiement',     mpLabel(r.methode_paiement)],
     ['Statut', {
       'confirme':   '✅ Réservation confirmée',
       'en_attente': '⏳ En attente de confirmation',
@@ -4058,7 +4072,7 @@ async function loadAdminOverview() {
         + '<td>' + fmtDate(r.date_arrivee) + '</td>'
         + '<td>' + fmtDate(r.date_depart) + '</td>'
         + '<td style="white-space:nowrap">' + fmt(r.montant_total) + ' FCFA</td>'
-        + '<td style="font-size:11px">' + (r.methode_paiement || '—') + '</td>'
+        + '<td style="font-size:11px">' + (mpLabel(r.methode_paiement) || '—') + '</td>'
         + '<td>' + statutBadge(r.statut) + '</td>'
         + '</tr>';
     }).join('') + '</tbody></table></div>';
@@ -4857,7 +4871,7 @@ async function loadAdminResas() {
           + '<td>' + fmtDate(r.date_arrivee) + '</td>'
           + '<td>' + fmtDate(r.date_depart) + '</td>'
           + '<td style="white-space:nowrap;font-weight:500">' + fmt(r.montant_total) + ' F</td>'
-          + '<td style="font-size:11px">' + (r.methode_paiement || '—') + '</td>'
+          + '<td style="font-size:11px">' + (mpLabel(r.methode_paiement) || '—') + '</td>'
           + '<td>' + statutBadge(r.statut) + '</td>'
           + '<td><select onchange="updateResaStatut(\'' + r.id + '\',this.value)" class="admin-select" style="font-size:11px;padding:4px 6px">'
           + ['confirme', 'annule', 'termine'].map(function(s) {
@@ -4882,7 +4896,7 @@ function exportResas() {
     var headers = ['Référence', 'Nom', 'Téléphone', 'Email', 'Arrivée', 'Départ', 'Montant', 'Paiement', 'Statut'];
     var rows = data.map(function(r) {
       return [r.reference, r.client_nom, r.client_tel, r.client_email,
-        r.date_arrivee, r.date_depart, r.montant_total, r.methode_paiement, r.statut].join(';');
+        r.date_arrivee, r.date_depart, r.montant_total, mpLabel(r.methode_paiement), r.statut].join(';');
     });
     var csv  = headers.join(';') + '\n' + rows.join('\n');
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -4919,7 +4933,7 @@ async function loadPaiements() {
           + '<td style="color:#F5A623;font-family:monospace;font-size:10px">' + r.reference + '</td>'
           + '<td>' + r.client_nom + '</td>'
           + '<td style="font-weight:600;white-space:nowrap">' + fmt(r.montant_total) + ' FCFA</td>'
-          + '<td style="font-size:11px">' + (r.methode_paiement || '—') + '</td>'
+          + '<td style="font-size:11px">' + (mpLabel(r.methode_paiement) || '—') + '</td>'
           + '<td style="font-size:11px">' + fmtDate(r.created_at) + '</td>'
           + '<td>' + statutBadge(r.statut) + '</td>'
           + '</tr>';
@@ -6263,7 +6277,7 @@ async function notifyResaWhatsApp(resa, aptNom) {
     + '• Durée : ' + n + ' nuit' + (n > 1 ? 's' : '') + '\n'
     + '• Montant : ' + montant + '\n'
     + '• Référence : ' + resa.reference + '\n'
-    + '• Paiement : ' + (resa.methode_paiement || '—') + '\n\n'
+    + '• Paiement : ' + mpLabel(resa.methode_paiement) + '\n\n'
     + '✅ Confirmée automatiquement.';
 
   // Envoyer au numéro principal (WHATSAPP_NUMBER)
