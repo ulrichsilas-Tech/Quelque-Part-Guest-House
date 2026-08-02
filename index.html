@@ -3297,7 +3297,7 @@ async function initFlatpickrForApt(prefix, aptId, apt) {
   var { data: resas } = await sb.from('reservations')
     .select('date_arrivee, date_depart')
     .eq('appartement_id', aptId)
-    .in('statut', ['confirme','en_attente']);
+    .eq('statut', 'confirme');
   var disabled = (resas || []).map(function(r){ return { from: r.date_arrivee, to: r.date_depart }; });
   var fpDep = null;
   var fpArr = flatpickr('#'+prefix+'-arr', {
@@ -3362,7 +3362,7 @@ async function checkDispo(aptId, arrivee, depart) {
   var { data } = await sb.from('reservations')
     .select('id')
     .eq('appartement_id', aptId)
-    .in('statut', ['en_attente','confirme'])
+    .eq('statut', 'confirme')
     .lt('date_arrivee', depart)
     .gt('date_depart', arrivee);
   return !data || data.length===0;
@@ -6814,7 +6814,8 @@ async function onFeexPaymentFailed(resaData, feexRef, responseData) {
   }).eq('feexpay_id', feexRef);
 
   await sb.from('reservations').update({
-    statut_paiement: 'echec_paiement'
+    statut_paiement: 'echec_paiement',
+    statut:          'annule'
   }).eq('id', resaData.id);
 
   setFeexFeedback('❌ Paiement refusé ou annulé. Réessayez ou choisissez un autre mode.', '#dc2626');
