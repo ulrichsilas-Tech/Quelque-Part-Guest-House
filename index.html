@@ -6813,9 +6813,12 @@ async function onFeexPaymentFailed(resaData, feexRef, responseData) {
     raw_response:    JSON.stringify(responseData)
   }).eq('feexpay_id', feexRef);
 
+  // Le statut reste 'en_attente' (pas 'annule' : ça déclencherait à tort l'email
+  // d'annulation, réservé aux vraies demandes d'annulation par le client — voir
+  // send-email). Sans incidence sur le calendrier : celui-ci ne bloque une date
+  // que pour statut='confirme' (voir checkDispo / initFlatpickrForApt).
   await sb.from('reservations').update({
-    statut_paiement: 'echec_paiement',
-    statut:          'annule'
+    statut_paiement: 'echec_paiement'
   }).eq('id', resaData.id);
 
   setFeexFeedback('❌ Paiement refusé ou annulé. Réessayez ou choisissez un autre mode.', '#dc2626');
