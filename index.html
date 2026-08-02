@@ -6700,8 +6700,10 @@ async function doFeexPayment(resaData) {
       created_at:      new Date().toISOString()
     }]);
 
+    // La référence FeexPay est déjà stockée dans transactions.feexpay_id (voir
+    // l'insert juste au-dessus) — inutile de la dupliquer sur reservations.
     var { error: updResaErr } = await sb.from('reservations')
-      .update({ statut_paiement: 'en_attente', feexpay_order_id: feexRef })
+      .update({ statut_paiement: 'en_attente' })
       .eq('id', resaData.id);
     if (updResaErr) console.error('[FeexPay] Erreur update reservations (non bloquant) :', updResaErr);
 
