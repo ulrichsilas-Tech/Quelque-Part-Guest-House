@@ -6700,9 +6700,10 @@ async function doFeexPayment(resaData) {
       created_at:      new Date().toISOString()
     }]);
 
-    await sb.from('reservations')
-      .update({ statut_paiement: 'en_attente_paiement', feexpay_order_id: feexRef })
+    var { error: updResaErr } = await sb.from('reservations')
+      .update({ statut_paiement: 'en_attente', feexpay_order_id: feexRef })
       .eq('id', resaData.id);
+    if (updResaErr) console.error('[FeexPay] Erreur update reservations (non bloquant) :', updResaErr);
 
     // Vérifier si le statut est déjà final
     // Moov retourne FAILED ou SUCCESSFUL immédiatement (sans polling)
