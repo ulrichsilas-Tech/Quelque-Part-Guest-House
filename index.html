@@ -307,6 +307,8 @@ button{cursor:pointer;font-family:'Inter',sans-serif}
   padding:12px 6px 10px;text-align:center;font-size:11.5px;font-weight:500;color:var(--muted);
   transition:all .18s;cursor:pointer;user-select:none;background:#fff}
 .pay-opt.selected{border-color:var(--blue);color:var(--blue);background:#F0F4FF;box-shadow:0 0 0 3px rgba(27,46,122,.08)}
+.pay-opt-disabled{cursor:not-allowed;opacity:.55;background:#f8f9fa}
+.pay-opt-disabled:hover{border-color:rgba(27,46,122,.12)!important;background:#f8f9fa!important}
 .pay-opt:hover:not(.selected){border-color:rgba(27,46,122,.3);background:#f8f9ff}
 .pay-icon{width:44px;height:44px;display:block;margin:0 auto 6px;border-radius:8px;overflow:hidden;background:#f3f4f6}
 .pay-icon img{width:44px;height:44px;object-fit:contain;display:block}
@@ -3238,20 +3240,20 @@ document.addEventListener('click', function(){
 });
 
 function buildPaymentMethods(prefix) {
-  // N'afficher que MTN, Moov, Celtiis (les 3 réseaux Mobile Money directs)
-  var actives = METHODES_PAIEMENT.filter(function(m){
-    return m.actif && ['mtn','moov','celtiis'].indexOf(m.id) !== -1;
-  });
-  if (!actives.length) {
-    return '<div style="font-size:12px;color:var(--muted);padding:8px 0">Aucun moyen de paiement disponible pour le moment.</div>';
-  }
-  var cols = actives.length;
-  var opts = actives.map(function(m, i) {
-    var logoHtml = PAY_LOGOS[m.id]
-      ? '<span class="pay-icon">' + PAY_LOGOS[m.id] + '</span>'
-      : '<span class="pay-icon-emoji">' + m.icon + '</span>';    return '<div class="pay-opt'+(i===0?' selected':'')+'" data-pay-id="'+m.id+'" onclick="selPay(this,\''+prefix+'\')">'+logoHtml+'<span style="display:block;font-size:11px;font-weight:600;margin-top:2px">'+m.label+'</span></div>';
-  }).join('');
-  return '<div class="pay-methods" style="grid-template-columns:repeat('+cols+',1fr)">'+opts+'</div>';
+  // Étape 1 (page de réservation) : choix générique du MODE de paiement.
+  // Le choix de l'opérateur précis (MTN/Moov/Celtiis) se fait ensuite dans la
+  // modale FeexPay, à l'étape 2 — évite de faire choisir l'opérateur deux fois.
+  return '<div class="pay-methods" style="grid-template-columns:repeat(2,1fr)">'
+    + '<div class="pay-opt selected" data-pay-id="mobile_money" onclick="selPay(this,\''+prefix+'\')">'
+    +   '<span class="pay-icon-emoji" style="font-size:22px">📱</span>'
+    +   '<span style="display:block;font-size:12px;font-weight:600;margin-top:4px">Mobile Money</span>'
+    + '</div>'
+    + '<div class="pay-opt pay-opt-disabled" data-pay-id="carte" onclick="showToast(\'Le paiement par carte bancaire arrive bientôt.\',\'info\')">'
+    +   '<span class="pay-icon-emoji" style="font-size:22px;opacity:.4">💳</span>'
+    +   '<span style="display:block;font-size:12px;font-weight:600;margin-top:4px;color:var(--muted)">Carte Bancaire</span>'
+    +   '<span style="display:block;font-size:9px;color:var(--muted);margin-top:2px">Bientôt disponible</span>'
+    + '</div>'
+    + '</div>';
 }
 
 function buildBookForm(prefix, apt) {
@@ -3324,6 +3326,7 @@ async function initFlatpickrForApt(prefix, aptId, apt) {
 }
 
 function selPay(el, prefix) {
+  if (el.classList.contains('pay-opt-disabled')) return; // Carte bancaire : pas encore disponible
   var parent = el.closest ? el.closest('.pay-methods') : el.parentNode;
   parent.querySelectorAll('.pay-opt').forEach(function(o){o.classList.remove('selected');});
   el.classList.add('selected');
@@ -3433,9 +3436,9 @@ async function submitResa(prefix, aptId) {
   var montantAcompte = Math.min(Number(apt.acompte) || 5000, montant);
   var ref = genRef();
 
-  // Tous les paiements passent par FeexPay (MTN, Moov, Celtiis)
-  var feexpayNetworks = ['mtn', 'moov', 'celtiis'];
-  if (feexpayNetworks.indexOf(methode) !== -1) {
+  // Choix "Mobile Money" à l'étape 1 → déclenche le flux FeexPay ; l'opérateur
+  // précis (MTN/Moov/Celtiis) est choisi ensuite dans la modale (étape 2).
+  if (methode === 'mobile_money') {
     // Créer la réservation en statut "en_attente" — sera confirmée après paiement
     // de l'ACOMPTE uniquement (le solde sera réglé sur place).
     var { data: resaPay, error: payErr } = await sb.from('reservations').insert([{
@@ -6702,8 +6705,10 @@ async function doFeexPayment(resaData) {
 
     // La référence FeexPay est déjà stockée dans transactions.feexpay_id (voir
     // l'insert juste au-dessus) — inutile de la dupliquer sur reservations.
+    // On enregistre aussi le vrai opérateur choisi (MTN/Moov/Celtiis), qui
+    // remplace le "mobile_money" générique posé à l'étape 1.
     var { error: updResaErr } = await sb.from('reservations')
-      .update({ statut_paiement: 'en_attente' })
+      .update({ statut_paiement: 'en_attente', methode_paiement: network })
       .eq('id', resaData.id);
     if (updResaErr) console.error('[FeexPay] Erreur update reservations (non bloquant) :', updResaErr);
 
