@@ -6717,7 +6717,7 @@ async function doFeexPayment(resaData) {
       return;
     }
     if (failStatuses.indexOf(feexStatus) !== -1) {
-      await onFeexPaymentFailed(resaData, feexRef, json);
+      await onFeexPaymentFailed(resaData, feexRef, json.reason || null);
       return;
     }
 
@@ -6736,6 +6736,28 @@ async function doFeexPayment(resaData) {
 /**
  * Polling : vérifier le statut du paiement toutes les 5s pendant 3 minutes
  */
+/**
+ * Traduit un code de rejet FeexPay/opérateur en message clair pour le client.
+ * Liste basée sur les codes observés en usage réel — complétée au fil du temps.
+ */
+function feexpayReasonLabel(reason) {
+  var map = {
+    'LOW_BALANCE_OR_PAYEE_LIMIT_REACHED_OR_NOT_ALLOWED':
+      'Solde Mobile Money insuffisant, ou limite de réception atteinte sur ce compte. Vérifiez votre solde ou réessayez avec un autre numéro.',
+    'PAYER_NOT_FOUND':
+      'Ce numéro Mobile Money est introuvable. Vérifiez qu\'il est correct et actif.',
+    'INSUFFICIENT_BALANCE':
+      'Solde Mobile Money insuffisant pour effectuer ce paiement.',
+    'TIMEOUT':
+      'Le délai pour saisir votre code PIN est dépassé. Réessayez.',
+    'CANCELLED':
+      'Le paiement a été annulé depuis votre téléphone.',
+    'PAYER_LIMIT_REACHED':
+      'La limite de réception de ce compte Mobile Money est atteinte.',
+  };
+  return map[reason] || null;
+}
+
 function startFeexPolling(resaData, feexRef, network) {
   var attempts  = 0;
   var maxAttempts = 36; // 36 × 5s = 3 minutes
@@ -6757,7 +6779,7 @@ function startFeexPolling(resaData, feexRef, network) {
       // (On n'interroge plus FeexPay directement : leur confirmation passe par Webhook,
       // pas par un endpoint de statut interrogeable — voir doc FeexPay.)
       var { data: txRow } = await sb.from('transactions')
-        .select('statut')
+        .select('statut, raw_response')
         .eq('feexpay_id', feexRef)
         .maybeSingle();
 
@@ -6768,7 +6790,12 @@ function startFeexPolling(resaData, feexRef, network) {
         await onFeexPaymentConfirmed(resaData, feexRef, {});
       } else if (status === 'echoue') {
         clearInterval(window._feexPollingTimer);
-        await onFeexPaymentFailed(resaData, feexRef, {});
+        var reason = null;
+        try {
+          var parsed = txRow.raw_response ? JSON.parse(txRow.raw_response) : null;
+          reason = parsed && parsed.reason ? parsed.reason : null;
+        } catch(parseErr) { /* raw_response non-JSON ou vide, ignorer */ }
+        await onFeexPaymentFailed(resaData, feexRef, reason);
       }
       // en_attente → continuer le polling
     } catch(e) {
@@ -6808,11 +6835,17 @@ async function onFeexPaymentConfirmed(resaData, feexRef, responseData) {
 /**
  * Paiement échoué
  */
-async function onFeexPaymentFailed(resaData, feexRef, responseData) {
+/**
+ * Paiement échoué — `reason` est le code brut FeexPay/opérateur (ou null),
+ * extrait par startFeexPolling depuis raw_response.
+ */
+async function onFeexPaymentFailed(resaData, feexRef, reason) {
+  // Ne PAS réécrire raw_response ici : la Edge Function feexpay-webhook l'a
+  // déjà rempli avec la vraie réponse de FeexPay (avec le motif exact) — on
+  // ne fait que mettre à jour le statut final, sans écraser cette donnée.
   await sb.from('transactions').update({
     statut:          'echoue',
-    completed_at:    new Date().toISOString(),
-    raw_response:    JSON.stringify(responseData)
+    completed_at:    new Date().toISOString()
   }).eq('feexpay_id', feexRef);
 
   // Le statut reste 'en_attente' (pas 'annule' : ça déclencherait à tort l'email
@@ -6823,7 +6856,11 @@ async function onFeexPaymentFailed(resaData, feexRef, responseData) {
     statut_paiement: 'echec_paiement'
   }).eq('id', resaData.id);
 
-  setFeexFeedback('❌ Paiement refusé ou annulé. Réessayez ou choisissez un autre mode.', '#dc2626');
+  var reasonMsg = feexpayReasonLabel(reason);
+  var displayMsg = reasonMsg
+    ? '❌ Paiement refusé : ' + reasonMsg
+    : '❌ Paiement refusé ou annulé' + (reason ? ' (' + reason + ')' : '') + '. Réessayez ou choisissez un autre mode.';
+  setFeexFeedback(displayMsg, '#dc2626');
   var btn = document.getElementById('fp-pay-btn');
   if (btn) { btn.disabled = false; btn.textContent = 'Réessayer →'; }
 }
