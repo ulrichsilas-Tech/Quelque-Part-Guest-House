@@ -3894,7 +3894,7 @@ async function adminLogin() {
   btn.disabled = false;
   btn.innerHTML = 'Se connecter';
   if (r.error || !r.data.user) { err.classList.add('show'); return; }
-  showAdminDashboard(r.data.user);
+  await showAdminDashboard(r.data.user);
 }
 
 async function adminLogout() {
@@ -4027,17 +4027,35 @@ async function doResetPassword() {
   goTo('admin');
 }
 
-function showAdminDashboard(user) {
+async function showAdminDashboard(user) {
+  // Vérifier que ce compte existe bien dans profils_admins et qu'il est actif.
+  // Avant ce correctif, N'IMPORTE QUEL compte Supabase Auth valide entrait
+  // dans l'admin, sans aucune vérification — faille corrigée ici.
+  var { data: profil, error: profilErr } = await sb.from('profils_admins')
+    .select('role, actif')
+    .eq('email', user.email)
+    .maybeSingle();
+
+  if (profilErr || !profil || !profil.actif) {
+    await sb.auth.signOut();
+    var errEl = document.getElementById('admin-login-err');
+    if (errEl) {
+      errEl.textContent = 'Ce compte n\'est pas autorisé à accéder au back-office (introuvable ou désactivé dans Utilisateurs admin).';
+      errEl.classList.add('show');
+    }
+    return;
+  }
+
   document.getElementById('admin-login-view').style.display    = 'none';
   document.getElementById('admin-dashboard-view').style.display = 'block';
   document.getElementById('admin-email-display').textContent   = user.email;
 
-  // Détecter le Super Admin
-  window._superAdmin = (user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
+  // Rôle Super Admin déterminé par profils_admins.role — plus par un email
+  // codé en dur — modifiable désormais entièrement depuis l'interface.
+  window._superAdmin = (profil.role === 'super_admin');
   var dashboard = document.getElementById('admin-dashboard-view');
   if (window._superAdmin) {
     dashboard.classList.add('is-super-admin');
-    // Afficher badge Super Admin
     var badge = document.getElementById('admin-role-badge');
     if (badge) { badge.textContent = '⭐ Super Admin'; badge.className = 'admin-role-badge role-super'; }
   } else {
