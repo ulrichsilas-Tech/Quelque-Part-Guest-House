@@ -2369,6 +2369,11 @@ var FONNTE_API   = 'https://api.fonnte.com/send';
 // Les appels passent par une Edge Function Supabase (évite le blocage CORS navigateur)
 var FEEXPAY_TOKEN = ''; // API Key — chargé depuis Supabase parametres
 var FEEXPAY_SHOP  = ''; // Shop ID — chargé depuis Supabase parametres
+// Frais de transaction FeexPay, en % — purement informatif côté affichage tant
+// que non confirmé ; NE modifie PAS le montant réellement débité (voir
+// feexpay-proxy, qui facture toujours reservation.acompte sans supplément).
+// Reste à 0 (donc masqué) tant que le vrai taux n'est pas connu et configuré.
+var FEEXPAY_FRAIS_PCT = 0;
 // URL de l'Edge Function proxy FeexPay (à déployer dans Supabase)
 var FEEXPAY_EDGE_URL = 'https://utyimnjxgfeevdhrmgyc.supabase.co/functions/v1/feexpay-proxy';
 // Réseaux disponibles : mtn | moov | celtiis | coris (Bénin)
@@ -5642,6 +5647,8 @@ function applyParametresSite(map) {
   if (map['fonnte_token'])    FONNTE_TOKEN  = map['fonnte_token'];
   if (map['feexpay_token'])   FEEXPAY_TOKEN = map['feexpay_token'];
   if (map['feexpay_shop'])    FEEXPAY_SHOP  = map['feexpay_shop'];
+  if (map['feexpay_frais_pct'] != null && map['feexpay_frais_pct'] !== '')
+    FEEXPAY_FRAIS_PCT = parseFloat(map['feexpay_frais_pct']) || 0;
   if (map['whatsapp_number']) window.WHATSAPP_NUMBER = map['whatsapp_number'];
   if (map['site_url']) {
     var su = map['site_url'].replace(/\/$/, '');
@@ -6462,6 +6469,18 @@ function showFeexPayModal(resaData, preselectedNetwork) {
     + (resaData.montant_total > resaData.montant_acompte
         ? '<div style="font-size:10.5px;color:#6b7280;margin-top:4px;text-align:right">Prix total du séjour : ' + fmt(resaData.montant_total) + ' FCFA · Solde de ' + fmt(resaData.montant_total - resaData.montant_acompte) + ' FCFA à régler sur place</div>'
         : '')
+    + (FEEXPAY_FRAIS_PCT > 0
+        ? (function(){
+            var frais = Math.round(resaData.montant_acompte * FEEXPAY_FRAIS_PCT / 100);
+            var total = resaData.montant_acompte + frais;
+            return '<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #d1d5db;font-size:11.5px;color:#374151">'
+              + '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Montant</span><span>' + fmt(resaData.montant_acompte) + ' FCFA</span></div>'
+              + '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Frais*</span><span>' + fmt(frais) + ' FCFA</span></div>'
+              + '<div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700;color:#111"><span>Montant total à payer</span><span>' + fmt(total) + ' FCFA</span></div>'
+              + '<div style="font-size:9.5px;color:#9ca3af;margin-top:2px">*Les frais de transaction sont de ' + FEEXPAY_FRAIS_PCT.toLocaleString('fr-FR') + '% du montant.</div>'
+              + '</div>';
+          })()
+        : '')
     + '</div>'
 
     // Corps
@@ -6745,6 +6764,21 @@ async function doFeexPayment(resaData) {
  * Traduit un code de rejet FeexPay/opérateur en message clair pour le client.
  * Liste basée sur les codes observés en usage réel — complétée au fil du temps.
  */
+/**
+ * Titre court affiché dans la modale de résultat, associé à chaque motif.
+ */
+function feexpayReasonTitle(reason) {
+  var map = {
+    'LOW_BALANCE_OR_PAYEE_LIMIT_REACHED_OR_NOT_ALLOWED': 'Solde insuffisant',
+    'INSUFFICIENT_BALANCE':                              'Solde insuffisant',
+    'PAYER_NOT_FOUND':                                   'Numéro introuvable',
+    'TIMEOUT':                                            'Délai dépassé',
+    'CANCELLED':                                          'Paiement annulé',
+    'PAYER_LIMIT_REACHED':                                'Limite atteinte',
+  };
+  return map[reason] || 'Paiement refusé';
+}
+
 function feexpayReasonLabel(reason) {
   var map = {
     'LOW_BALANCE_OR_PAYEE_LIMIT_REACHED_OR_NOT_ALLOWED':
@@ -6863,11 +6897,51 @@ async function onFeexPaymentFailed(resaData, feexRef, reason) {
 
   var reasonMsg = feexpayReasonLabel(reason);
   var displayMsg = reasonMsg
-    ? '❌ Paiement refusé : ' + reasonMsg
-    : '❌ Paiement refusé ou annulé' + (reason ? ' (' + reason + ')' : '') + '. Réessayez ou choisissez un autre mode.';
-  setFeexFeedback(displayMsg, '#dc2626');
+    || ('Paiement refusé ou annulé' + (reason ? ' (' + reason + ')' : '') + '. Réessayez ou choisissez un autre mode.');
+  setFeexFeedback('❌ ' + displayMsg, '#dc2626');
+  showFeexResultOverlay({
+    icon:  '⚠️',
+    color: '#e07b00',
+    title: feexpayReasonTitle(reason),
+    message: displayMsg + (reasonMsg ? '' : ' Réessayez ou choisissez un autre numéro/opérateur.'),
+    buttonLabel: 'Réessayer'
+  });
   var btn = document.getElementById('fp-pay-btn');
   if (btn) { btn.disabled = false; btn.textContent = 'Réessayer →'; }
+}
+
+/**
+ * Fenêtre modale de résultat (ex. "Solde insuffisant") — remplace le simple
+ * message texte pour les échecs de paiement, plus visible et plus clair.
+ */
+function showFeexResultOverlay(opts) {
+  var existing = document.getElementById('feex-result-overlay');
+  if (existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'feex-result-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(17,17,17,.55);z-index:100000;'
+    + 'display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML = ''
+    + '<div style="background:#fff;border-radius:16px;max-width:360px;width:100%;overflow:hidden;'
+    + 'box-shadow:0 20px 60px rgba(0,0,0,.35)">'
+    + '<div style="height:5px;background:' + opts.color + '"></div>'
+    + '<div style="padding:34px 28px 28px;text-align:center">'
+    + '<div style="width:64px;height:64px;border-radius:50%;background:' + opts.color + '1f;'
+    +   'display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:28px">'
+    +   opts.icon
+    + '</div>'
+    + '<div style="font-size:19px;font-weight:700;color:#111;margin-bottom:8px">' + opts.title + '</div>'
+    + '<div style="font-size:13.5px;color:#666;line-height:1.6;margin-bottom:26px">' + opts.message + '</div>'
+    + '<button onclick="closeFeexResultOverlay()" style="width:100%;background:' + opts.color + ';color:#fff;'
+    +   'border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer">'
+    +   (opts.buttonLabel || 'Réessayer')
+    + '</button>'
+    + '</div></div>';
+  document.body.appendChild(ov);
+}
+function closeFeexResultOverlay() {
+  var ov = document.getElementById('feex-result-overlay');
+  if (ov) ov.remove();
 }
 
 function setFeexFeedback(msg, color) {
