@@ -2504,7 +2504,10 @@ async function callEmailService(type, payload) {
 // Reset mot de passe admin — appel direct (email #7)
 async function requestPasswordReset(adminEmail) {
   if (!adminEmail) return;
-  var redirectTo = window.location.origin + window.location.pathname + '#admin';
+  // #reset-password (pas #admin) : c'est ce hash que le code surveille au
+  // chargement pour détecter le lien de récupération et afficher le
+  // formulaire de nouveau mot de passe (voir showResetPasswordModal).
+  var redirectTo = window.location.origin + window.location.pathname + '#reset-password';
   return callEmailService('password_reset', { email: adminEmail, redirectTo: redirectTo });
 }
 
@@ -4033,7 +4036,7 @@ async function showAdminDashboard(user) {
   // dans l'admin, sans aucune vérification — faille corrigée ici.
   var { data: profil, error: profilErr } = await sb.from('profils_admins')
     .select('role, actif')
-    .eq('email', user.email)
+    .ilike('email', user.email)
     .maybeSingle();
 
   if (profilErr || !profil || !profil.actif) {
