@@ -3635,6 +3635,7 @@ function resetContact(){
 // ANNULATION RÉSERVATION (client self-service)
 // ═══════════════════════════════════════════════════════════
 var CANCEL_FUNCTION_URL = SUPABASE_URL + '/functions/v1/cancel-reservation';
+var MANAGE_ADMIN_URL    = SUPABASE_URL + '/functions/v1/manage-admin-user';
 var _cancelResaData = null; // stocke les données de la réservation trouvée
 
 // Réinitialise la page annulation à l'étape 1
@@ -5401,6 +5402,7 @@ async function loadUtilisateurs() {
       + '&nbsp;&nbsp;role TEXT DEFAULT \'admin\' CHECK (role IN (\'admin\',\'super_admin\')),<br>'
       + '&nbsp;&nbsp;notif_email BOOLEAN DEFAULT true,<br>'
       + '&nbsp;&nbsp;actif BOOLEAN DEFAULT true,<br>'
+      + '&nbsp;&nbsp;user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,<br>'
       + '&nbsp;&nbsp;created_at TIMESTAMPTZ DEFAULT NOW()<br>'
       + '); ALTER TABLE profils_admins ENABLE ROW LEVEL SECURITY;<br>'
       + 'CREATE POLICY "Admin access" ON profils_admins FOR ALL USING (auth.role() = \'authenticated\');</code></div>';
@@ -5446,6 +5448,29 @@ async function loadUtilisateurs() {
   }).join('');
 }
 
+// Appel générique vers la Edge Function manage-admin-user (création / suppression
+// automatique des comptes Auth des gérants — plus aucune manipulation manuelle
+// dans Supabase). Le JWT de session du Super Admin est envoyé pour que la
+// fonction puisse vérifier les droits côté serveur.
+async function callManageAdminUser(action, payload) {
+  var session = await sb.auth.getSession();
+  var jwt = (session.data && session.data.session) ? session.data.session.access_token : null;
+  if (!jwt) throw new Error("Session expirée — reconnectez-vous.");
+  var body = Object.assign({ action: action }, payload || {});
+  var res = await fetch(MANAGE_ADMIN_URL, {
+    method:  'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'apikey':        SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + jwt
+    },
+    body: JSON.stringify(body)
+  });
+  var json = await res.json();
+  if (!res.ok || json.error) throw new Error(json.error || ('Erreur (' + res.status + ')'));
+  return json;
+}
+
 function showAddUserModal() {
   if (!window._superAdmin) { showToast('Accès réservé au Super Admin', 'error'); return; }
   var body =
@@ -5463,9 +5488,9 @@ function showAddUserModal() {
     + '<div class="admin-form-group"><label class="admin-label">Notifications email</label>'
     + '<select class="admin-select" id="u-notif"><option value="1">🔔 Activées</option><option value="0">🔕 Désactivées</option></select></div>'
     + '</div>'
-    + '<div style="margin-top:12px;padding:10px 12px;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.2);border-radius:4px;font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.8">'
-    + '⚠️ Après ajout, créez le compte de connexion dans <strong style="color:#d4af37">Supabase Auth → Users → Invite user</strong> '
-    + 'avec le même email. Le gérant recevra un email pour définir son mot de passe.</div>';
+    + '<div style="margin-top:12px;padding:10px 12px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2);border-radius:4px;font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.8">'
+    + '✅ Le compte de connexion est créé automatiquement. Le gérant recevra un email '
+    + "d'invitation pour définir son mot de passe — aucune action dans Supabase n'est requise.</div>";
   showAdminModal('Ajouter un gérant', body, '+ Ajouter', 'doAddAdminUser()');
 }
 
@@ -5478,14 +5503,18 @@ async function doAddAdminUser() {
   var notif = ((document.getElementById('u-notif')||{}).value||'1') === '1';
   if (!email) { showToast('Email requis', 'error'); return; }
   if (!nom)   { showToast('Nom requis', 'error');   return; }
-  var { error } = await sb.from('profils_admins').insert([{
-    email:email, nom:nom, telephone:tel, role:role, notif_email:notif, actif:true
-  }]);
-  if (error) { showToast('Erreur : '+(error.message||'inconnue'), 'error'); return; }
-  showToast('Gérant ajouté : '+nom+' ('+email+')', 'success');
-  closeAdminModal();
-  loadUtilisateurs();
-  loadAdminEmailsFromDB();
+  var btn = document.getElementById('admin-modal-save-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Création…'; }
+  try {
+    await callManageAdminUser('create', { email: email, nom: nom, telephone: tel, role: role, notif_email: notif });
+    showToast("Gérant créé — email d'invitation envoyé à " + email, 'success');
+    closeAdminModal();
+    loadUtilisateurs();
+    loadAdminEmailsFromDB();
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '+ Ajouter'; }
+  }
 }
 
 // Alias pour compatibilité avec les boutons existants dans le HTML
@@ -5552,11 +5581,15 @@ async function toggleAdminUser(id, actif) {
 
 async function deleteAdminUser(id, nom) {
   if (!window._superAdmin) return;
-  if (!confirm('Supprimer définitivement le gérant « '+(nom||id)+' » ?\n\nSon compte Supabase Auth reste intact — supprimez-le manuellement dans Supabase si besoin.')) return;
-  await sb.from('profils_admins').delete().eq('id', id);
-  showToast('Gérant supprimé', 'success');
-  loadUtilisateurs();
-  loadAdminEmailsFromDB();
+  if (!confirm('Supprimer définitivement le gérant « ' + (nom||id) + ' » ?\n\nSon compte de connexion sera aussi supprimé automatiquement.')) return;
+  try {
+    await callManageAdminUser('delete', { id: id });
+    showToast('Gérant supprimé (profil + compte de connexion)', 'success');
+    loadUtilisateurs();
+    loadAdminEmailsFromDB();
+  } catch (e) {
+    showToast('Erreur : ' + e.message, 'error');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
