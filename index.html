@@ -3871,7 +3871,7 @@ async function checkAdminSession() {
       return;
     }
     // Session établie → afficher la modale de nouveau mot de passe
-    showResetPasswordModal();
+    showResetPasswordModal(tokens.mode);
     return;
   }
   // ── Vérification session normale ─────────────────────────────────────────────
@@ -3947,14 +3947,17 @@ async function handleForgotPassword() {
   }
 }
 
-// ── Intercepteur : token de recovery dans l'URL (lien email Supabase) ─────────
-// Supabase insère les tokens dans le hash : #access_token=...&type=recovery
+// ── Intercepteur : token de recovery OU d'invitation dans l'URL (lien email Supabase) ─
+// Recovery : #access_token=...&type=recovery   |   Invitation : #access_token=...&type=invite
 (function handlePasswordRecoveryFromURL() {
   var hash     = window.location.hash   || '';
   var search   = window.location.search || '';
   var combined = hash + '&' + search;
 
-  if (combined.indexOf('type=recovery') === -1) return;
+  var mode = null;
+  if (combined.indexOf('type=recovery') !== -1) mode = 'recovery';
+  else if (combined.indexOf('type=invite') !== -1 || combined.indexOf('type=signup') !== -1) mode = 'invite';
+  if (!mode) return;
 
   // Parser les paramètres du hash ET de la query string
   var params = {};
@@ -3978,13 +3981,16 @@ async function handleForgotPassword() {
   // Flag global : bloque checkAdminSession et déclenche la modale à la place
   window._pendingPasswordReset = {
     access_token:  params.access_token,
-    refresh_token: params.refresh_token || ''
+    refresh_token: params.refresh_token || '',
+    mode:          mode
   };
 })();
 
-function showResetPasswordModal() {
+function showResetPasswordModal(mode) {
   // Créer la modale si elle n'existe pas encore
   if (document.getElementById('reset-pw-modal')) return;
+  var isInvite = mode === 'invite';
+  window._resetPwMode = mode || 'recovery';
   var overlay = document.createElement('div');
   overlay.id = 'reset-pw-modal';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;'
@@ -3992,14 +3998,18 @@ function showResetPasswordModal() {
   overlay.innerHTML =
     '<div style="background:#1a1f3a;border:1px solid rgba(255,255,255,.12);border-radius:10px;'
     + 'padding:32px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.6)">'
-    + '<div style="font-family:\'Playfair Display\',serif;font-size:18px;color:#fff;margin-bottom:6px">🔐 Nouveau mot de passe</div>'
-    + '<div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:20px">Choisissez un nouveau mot de passe pour votre compte administrateur.</div>'
-    + '<div class="admin-form-group"><label class="admin-label">Nouveau mot de passe *</label>'
+    + '<div style="font-family:\'Playfair Display\',serif;font-size:18px;color:#fff;margin-bottom:6px">'
+    + (isInvite ? '👋 Bienvenue — activez votre compte' : '🔐 Nouveau mot de passe') + '</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:20px">'
+    + (isInvite ? 'Choisissez votre mot de passe pour finaliser la création de votre compte administrateur.' : 'Choisissez un nouveau mot de passe pour votre compte administrateur.')
+    + '</div>'
+    + '<div class="admin-form-group"><label class="admin-label">' + (isInvite ? 'Mot de passe *' : 'Nouveau mot de passe *') + '</label>'
     + '<input class="admin-input" id="reset-pw-new" type="password" placeholder="Minimum 8 caractères" autocomplete="new-password"></div>'
     + '<div class="admin-form-group" style="margin-top:10px"><label class="admin-label">Confirmer le mot de passe *</label>'
     + '<input class="admin-input" id="reset-pw-confirm" type="password" placeholder="Répéter le mot de passe" autocomplete="new-password"></div>'
     + '<div id="reset-pw-msg" style="min-height:18px;font-size:12px;margin-top:8px"></div>'
-    + '<button class="admin-btn" style="width:100%;margin-top:16px" onclick="doResetPassword()">Enregistrer le nouveau mot de passe</button>'
+    + '<button class="admin-btn" style="width:100%;margin-top:16px" onclick="doResetPassword()">'
+    + (isInvite ? 'Activer mon compte' : 'Enregistrer le nouveau mot de passe') + '</button>'
     + '</div>';
   document.body.appendChild(overlay);
   setTimeout(function() { var el = document.getElementById('reset-pw-new'); if(el) el.focus(); }, 100);
@@ -4025,9 +4035,21 @@ async function doResetPassword() {
   }
   var overlay = document.getElementById('reset-pw-modal');
   if (overlay) overlay.remove();
-  showToast('✅ Mot de passe mis à jour. Reconnectez-vous.', 'success');
-  await sb.auth.signOut();
-  goTo('admin');
+
+  if (window._resetPwMode === 'invite') {
+    // Compte tout juste activé : on connecte directement le gérant, pas de reconnexion à refaire
+    showToast('✅ Compte activé — bienvenue !', 'success');
+    var sessionRes = await sb.auth.getSession();
+    if (sessionRes.data && sessionRes.data.session) {
+      showAdminDashboard(sessionRes.data.session.user);
+    } else {
+      goTo('admin');
+    }
+  } else {
+    showToast('✅ Mot de passe mis à jour. Reconnectez-vous.', 'success');
+    await sb.auth.signOut();
+    goTo('admin');
+  }
 }
 
 async function showAdminDashboard(user) {
